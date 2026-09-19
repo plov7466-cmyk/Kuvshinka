@@ -1,5 +1,6 @@
 const path = require('path');
 const dotenv = require('dotenv');
+const express = require('express');
 
 dotenv.config({
     path: path.join(__dirname, '.env'),
@@ -18,6 +19,23 @@ const {
     MessageFlags
 } = require('discord.js');
 
+// =========================
+// 🌐 HTTP-СЕРВЕР ДЛЯ KOYEB
+// =========================
+const app = express();
+const PORT = process.env.PORT || 8000;
+
+app.get('/', (req, res) => {
+    res.send('🐸 Кувшинка онлайн');
+});
+
+app.listen(PORT, () => {
+    console.log(`🌐 HTTP-сервер запущен на порту ${PORT}`);
+});
+
+// =========================
+// 🐸 DISCORD-КЛИЕНТ
+// =========================
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -34,13 +52,12 @@ const WELCOME_CHANNEL_ID = '1510063211099983902';
 const CREATE_ROOM_CHANNEL_ID = '1518746457988010045';
 const ROOM_SUFFIX = "'s Лужа";
 
-// Хранилище владельцев комнат (channelId -> userId)
 const roomOwners = new Map();
 
 // =========================
 // 🐸 ЗАПУСК
 // =========================
-client.once('clientReady', () => {
+client.once('ready', () => {
     console.log(`🐸 Кувшинка запущена как ${client.user.tag}`);
 });
 
@@ -133,7 +150,6 @@ async function updatePanel(channel) {
 // =========================
 async function transferOwnership(channel, oldOwnerId, newOwnerId, auto = false) {
     try {
-        // Снимаем права у старого владельца
         if (oldOwnerId) {
             await channel.permissionOverwrites.edit(oldOwnerId, {
                 ManageChannels: false,
@@ -143,19 +159,14 @@ async function transferOwnership(channel, oldOwnerId, newOwnerId, auto = false) 
             }).catch(err => console.error('⚠️ Не удалось снять права у старого владельца:', err));
         }
 
-        // Выдаём права новому
         await channel.permissionOverwrites.edit(newOwnerId, {
             ManageChannels: true,
             MoveMembers: true
         });
 
-        // Обновляем карту владельцев
         roomOwners.set(channel.id, newOwnerId);
-
-        // Обновляем панель управления
         await updatePanel(channel);
 
-        // Уведомление в чат лужи
         const text = auto
             ? `👑 Владелец покинул лужу. Владение автоматически передано <@${newOwnerId}>.`
             : `👑 Владение передано участнику <@${newOwnerId}>.`;
@@ -172,7 +183,6 @@ async function transferOwnership(channel, oldOwnerId, newOwnerId, auto = false) 
 // =========================
 client.on('voiceStateUpdate', async (oldState, newState) => {
     try {
-        // --- Создание лужи ---
         if (
             newState.channelId === CREATE_ROOM_CHANNEL_ID &&
             oldState.channelId !== CREATE_ROOM_CHANNEL_ID
@@ -180,7 +190,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             const member = newState.member;
             if (!member) return;
 
-            // Если у пользователя уже есть пустая лужа — перекидываем в неё
             const existing = newState.guild.channels.cache.find(
                 c => c.name === `${member.displayName}${ROOM_SUFFIX}` &&
                      c.type === ChannelType.GuildVoice
@@ -226,7 +235,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             console.log(`🐸 ${member.user.tag} перемещён в свою лужу`);
         }
 
-        // --- Выход из лужи ---
         const oldChannel = oldState.channel;
 
         if (
@@ -242,7 +250,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 try {
                     const fresh = await oldChannel.fetch();
 
-                    // Если лужа пуста — удаляем
                     if (fresh.members.size === 0) {
                         const name = fresh.name;
                         roomOwners.delete(fresh.id);
@@ -251,7 +258,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                         return;
                     }
 
-                    // Если владелец вышел, а люди остались — автопередача
                     if (ownerLeft && fresh.members.size > 0) {
                         const next = fresh.members.find(m => !m.user.bot);
                         if (next) {
@@ -288,7 +294,6 @@ client.on('interactionCreate', async (interaction) => {
     const ownerId = roomOwners.get(channelId);
     const member = interaction.member;
 
-    // ✅ Только текущий владелец
     if (member.id !== ownerId) {
         return interaction.reply({
             content: '❌ Только владелец может управлять лужей.',
@@ -296,7 +301,6 @@ client.on('interactionCreate', async (interaction) => {
         });
     }
 
-    // --- ЛИМИТ ---
     if (customId.startsWith('limit_')) {
         const select = new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
@@ -318,7 +322,6 @@ client.on('interactionCreate', async (interaction) => {
         });
     }
 
-    // --- ЗАКРЫТЬ ---
     if (customId.startsWith('lock_')) {
         await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
             ViewChannel: false
@@ -329,7 +332,6 @@ client.on('interactionCreate', async (interaction) => {
         });
     }
 
-    // --- ОТКРЫТЬ ---
     if (customId.startsWith('unlock_')) {
         await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
             ViewChannel: true,
@@ -341,7 +343,6 @@ client.on('interactionCreate', async (interaction) => {
         });
     }
 
-    // --- ПЕРЕДАТЬ ВЛАДЕНИЕ ---
     if (customId.startsWith('transfer_')) {
         const inVoice = channel.members.filter(m => m.id !== member.id && !m.user.bot);
 
@@ -373,7 +374,6 @@ client.on('interactionCreate', async (interaction) => {
         });
     }
 
-    // --- УДАЛИТЬ ---
     if (customId.startsWith('delete_')) {
         await interaction.reply({
             content: '🧹 Лужа закрывается...',
@@ -399,7 +399,6 @@ client.on('interactionCreate', async (interaction) => {
     const ownerId = roomOwners.get(channelId);
     const member = interaction.member;
 
-    // --- ЛИМИТ ---
     if (customId.startsWith('limit_select_')) {
         if (member.id !== ownerId) {
             return interaction.update({ content: '❌ Нет прав.', components: [] });
@@ -415,7 +414,6 @@ client.on('interactionCreate', async (interaction) => {
         });
     }
 
-    // --- ПЕРЕДАЧА ВЛАДЕНИЯ ---
     if (customId.startsWith('transfer_select_')) {
         if (member.id !== ownerId) {
             return interaction.update({ content: '❌ Нет прав.', components: [] });
@@ -433,13 +431,11 @@ client.on('interactionCreate', async (interaction) => {
             });
         }
 
-        // ✅ Сначала быстро отвечаем — укладываемся в 3 секунды
         await interaction.update({
             content: `⏳ Передаю владение ${newOwner}...`,
             components: []
         });
 
-        // ✅ Потом делаем тяжёлую работу в фоне
         try {
             await transferOwnership(channel, ownerId, newOwnerId, false);
             await interaction.editReply({
