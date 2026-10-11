@@ -10,12 +10,8 @@ dotenv.config({
 const {
     Client, GatewayIntentBits, ChannelType, ActionRowBuilder, ButtonBuilder,
     ButtonStyle, StringSelectMenuBuilder, MessageFlags, EmbedBuilder, Options,
-    ContainerBuilder, TextDisplayBuilder, SectionBuilder, SeparatorBuilder,
-    MediaGalleryBuilder, MediaGalleryItemBuilder,
     ModalBuilder, TextInputBuilder, TextInputStyle
 } = require('discord.js');
-
-const { DiscordVCStatus } = require('discord-vc-status');
 
 const stats = require('./stats');
 const config = require('./config');
@@ -60,11 +56,6 @@ const client = new Client({
 });
 
 // =========================
-// 📝 ИНИЦИАЛИЗАЦИЯ VC STATUS
-// =========================
-client.vcStatus = new DiscordVCStatus(client);
-
-// =========================
 // 🐸 НАСТРОЙКИ
 // =========================
 const RULES_CHANNEL_ID = '1510063400535851198';
@@ -94,7 +85,7 @@ const REGIONS = [
 // =========================
 // 🐸 ЗАПУСК
 // =========================
-client.once('clientReady', async () => {
+client.once('ready', async () => {
     console.log(`Кувшинка запущена как ${client.user.tag}`);
     logMemory('при запуске');
 
@@ -148,66 +139,38 @@ client.on('guildMemberAdd', async (member) => {
 });
 
 // =========================
-// 🔧 ПАНЕЛЬ (Components V2)
+// 🔧 ПАНЕЛЬ (обычный Embed + кнопки снизу)
 // =========================
-function buildControlPanelV2(member, roomId) {
-    const container = new ContainerBuilder()
-        .setAccentColor(0x5865F2);
-
-    container.addMediaGalleryComponents(
-        new MediaGalleryBuilder().addItems(
-            new MediaGalleryItemBuilder()
-                .setURL(ROOM_IMAGE_URL)
-                .setDescription('Личная лужа')
-        )
-    );
-
-    container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-            `# 🌺 Твоя личная лужа\n\n` +
+function buildControlPanel(member, roomId) {
+    const embed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle('🌺 Твоя личная лужа')
+        .setDescription(
             `Это твоя личная лужа, ${member}!\n` +
-            `Используй кнопки для управления.`
+            `Используй кнопки ниже для управления.`
         )
-    );
+        .setThumbnail(ROOM_IMAGE_URL)
+        .setFooter({ text: `Владелец: ${member.displayName}` });
 
-    container.addSeparatorComponents(new SeparatorBuilder());
-
-    const actions = [
-        { emoji: '⚙️', label: 'Просмотреть настройки лужи',  id: 'info',     style: ButtonStyle.Secondary },
-        { emoji: '🖊️', label: 'Переименовать лужу',         id: 'name',     style: ButtonStyle.Secondary },
-        { emoji: '💬', label: 'Изменить статус лужи',        id: 'status',   style: ButtonStyle.Secondary },
-        { emoji: '👥', label: 'Изменить лимит лягушек',      id: 'limit',    style: ButtonStyle.Secondary },
-        { emoji: '🔒', label: 'Закрыть лужу для чужих',      id: 'lock',     style: ButtonStyle.Secondary },
-        { emoji: '🔓', label: 'Открыть лужу для всех',       id: 'unlock',   style: ButtonStyle.Secondary },
-        { emoji: '🌍', label: 'Сменить место обитания',      id: 'region',   style: ButtonStyle.Secondary },
-        { emoji: '⭐', label: 'Передать лужу другому',       id: 'transfer', style: ButtonStyle.Secondary },
-        { emoji: '🗑️', label: 'Высушить лужу',              id: 'delete',   style: ButtonStyle.Danger }
+    const rows = [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`info_${roomId}`).setLabel('Настройки').setEmoji('⚙️').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(`name_${roomId}`).setLabel('Название').setEmoji('🖊️').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(`status_${roomId}`).setLabel('Статус').setEmoji('💬').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(`limit_${roomId}`).setLabel('Лимит').setEmoji('👥').setStyle(ButtonStyle.Secondary)
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`lock_${roomId}`).setLabel('Закрыть').setEmoji('🔒').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(`unlock_${roomId}`).setLabel('Открыть').setEmoji('🔓').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(`region_${roomId}`).setLabel('Регион').setEmoji('🌍').setStyle(ButtonStyle.Secondary)
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`transfer_${roomId}`).setLabel('Передать').setEmoji('⭐').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`delete_${roomId}`).setLabel('Удалить').setEmoji('🗑️').setStyle(ButtonStyle.Danger)
+        )
     ];
 
-    for (const action of actions) {
-        container.addSectionComponents(
-            new SectionBuilder()
-                .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent(`${action.emoji} — ${action.label}`)
-                )
-                .setButtonAccessory(
-                    new ButtonBuilder()
-                        .setCustomId(`${action.id}_${roomId}`)
-                        .setEmoji(action.emoji)
-                        .setStyle(action.style)
-                )
-        );
-    }
-
-    container.addSeparatorComponents(new SeparatorBuilder());
-    container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-            `*Используй команду \`/panel\` для повторного вызова этого меню ` +
-            `(да, прямо в этом чате)*`
-        )
-    );
-
-    return container;
+    return { embeds: [embed], components: rows };
 }
 
 // =========================
@@ -241,11 +204,8 @@ async function refreshPanel(channel, newOwnerId) {
         if (panelMsg) {
             const newMember = await channel.guild.members.fetch(newOwnerId).catch(() => null);
             if (newMember) {
-                const newContainer = buildControlPanelV2(newMember, channel.id);
-                await panelMsg.edit({
-                    components: [newContainer],
-                    flags: MessageFlags.IsComponentsV2
-                });
+                const panel = buildControlPanel(newMember, channel.id);
+                await panelMsg.edit(panel);
             }
         }
     } catch (e) {}
@@ -297,11 +257,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             roomOwners.set(room.id, member.id);
 
             try {
-                const container = buildControlPanelV2(member, room.id);
-                await room.send({
-                    components: [container],
-                    flags: MessageFlags.IsComponentsV2
-                });
+                const panel = buildControlPanel(member, room.id);
+                await room.send(panel);
             } catch (e) {
                 console.error('❌ Ошибка отправки панели:', e);
             }
@@ -340,7 +297,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 });
 
 // =========================
-// 🔘 КНОПКИ (V2)
+// 🔘 КНОПКИ
 // =========================
 client.on('interactionCreate', async (interaction) => {
     try {
@@ -369,7 +326,7 @@ client.on('interactionCreate', async (interaction) => {
             });
         }
 
-        // ⚙️ Просмотр настроек лужи
+        // ⚙️ Настройки
         if (customId.startsWith('info_')) {
             const limitValue = channel.userLimit;
             const limitText = limitValue === 0 ? 'без лимита' : `${limitValue}`;
@@ -383,7 +340,6 @@ client.on('interactionCreate', async (interaction) => {
                 ? REGIONS.find(r => r.value === channel.rtcRegion)?.label || channel.rtcRegion
                 : 'Автоматически';
 
-            // Проверяем, открыт ли канал для @everyone
             const everyone = interaction.guild.roles.everyone;
             const overwrite = channel.permissionOverwrites.cache.get(everyone.id);
             const isOpen = overwrite
@@ -434,6 +390,7 @@ client.on('interactionCreate', async (interaction) => {
             });
         }
 
+        // ✏️ Название
         if (customId.startsWith('name_')) {
             const modal = new ModalBuilder()
                 .setCustomId(`name_modal_${channelId}`)
@@ -452,6 +409,7 @@ client.on('interactionCreate', async (interaction) => {
             return interaction.showModal(modal);
         }
 
+        // 💬 Статус
         if (customId.startsWith('status_')) {
             const modal = new ModalBuilder()
                 .setCustomId(`status_modal_${channelId}`)
@@ -470,6 +428,7 @@ client.on('interactionCreate', async (interaction) => {
             return interaction.showModal(modal);
         }
 
+        // 👥 Лимит
         if (customId.startsWith('limit_')) {
             const modal = new ModalBuilder()
                 .setCustomId(`limit_modal_${channelId}`)
@@ -488,6 +447,7 @@ client.on('interactionCreate', async (interaction) => {
             return interaction.showModal(modal);
         }
 
+        // 🌍 Регион
         if (customId.startsWith('region_')) {
             const select = new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
@@ -690,24 +650,8 @@ client.on('interactionCreate', async (interaction) => {
             }
 
             if (customId.startsWith('status_modal_')) {
-                const raw = interaction.fields.getTextInputValue('status_input').trim();
-                if (raw.length < 1) {
-                    return interaction.reply({
-                        content: '❌ Статус не может быть пустым.',
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
-                try {
-                    await client.vcStatus.setVoiceStatus(channelId, raw);
-                } catch (e) {
-                    console.error('setVoiceStatus:', e);
-                    return interaction.reply({
-                        content: '❌ Не удалось установить статус. Возможно, Discord временно не поддерживает эту функцию.',
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
                 return interaction.reply({
-                    content: `💬 Статус лужи обновлён: **${raw}**`,
+                    content: '💬 Установка статуса голосового канала временно недоступна.',
                     flags: MessageFlags.Ephemeral
                 });
             }
@@ -813,11 +757,8 @@ client.on('interactionCreate', async (interaction) => {
                 }
 
                 try {
-                    const container = buildControlPanelV2(member, voiceChannel.id);
-                    await voiceChannel.send({
-                        components: [container],
-                        flags: MessageFlags.IsComponentsV2
-                    });
+                    const panel = buildControlPanel(member, voiceChannel.id);
+                    await voiceChannel.send(panel);
                 } catch (e) {
                     console.error('❌ Ошибка отправки панели:', e);
                     return interaction.reply({
@@ -958,7 +899,7 @@ function getDisplayRole(member) {
 }
 
 // =========================
-// 🐸 ЭВОЛЮЦИЯ — один участник
+// 🐸 ЭВОЛЮЦИЯ
 // =========================
 async function checkMemberEvolution(member) {
     if (!member || member.user.bot) return;
@@ -1021,7 +962,7 @@ async function checkMemberEvolution(member) {
 }
 
 // =========================
-// 🐸 ЭВОЛЮЦИЯ — полная синхронизация
+// 🐸 ПОЛНАЯ СИНХРОНИЗАЦИЯ
 // =========================
 async function fullSync(client) {
     try {
