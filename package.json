@@ -11,7 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "discord.js": "15.0.0-dev.1791590611-281f8203d",
+    "discord.js": "^14.26.5",
     "discord-vc-status": "^1.0.2",
     "dotenv": "^18.0.1",
     "express": "^5.2.1"
