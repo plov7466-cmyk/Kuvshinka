@@ -150,9 +150,10 @@ client.on('guildMemberAdd', async (member) => {
 // =========================
 // 🔧 ПАНЕЛЬ (Components V2)
 // =========================
-function buildControlPanelV2(member, roomId) {
+function buildControlPanelV2(member, roomId, channel) {
+    // 1. Благородный приглушенный изумрудный акцент (не вырвиглазный)
     const container = new ContainerBuilder()
-        .setAccentColor(0x5865F2);
+        .setAccentColor(0x2E8B57); // SeaGreen
 
     container.addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems(
@@ -162,26 +163,44 @@ function buildControlPanelV2(member, roomId) {
         )
     );
 
+    // Получаем текущий лимит из канала
+    const currentLimit = channel ? channel.userLimit : 0;
+    const limitText = currentLimit === 0 ? 'без лимита' : `${currentLimit} чел.`;
+
+    // Проверяем, открыт ли канал для @everyone
+    let isOpen = true;
+    if (channel && channel.guild) {
+        const everyone = channel.guild.roles.everyone;
+        const overwrite = channel.permissionOverwrites.cache.get(everyone.id);
+        if (overwrite) {
+            isOpen = overwrite.allow.has('ViewChannel') || overwrite.allow.has('Connect');
+        }
+    }
+    const accessText = isOpen ? '🔓 Открыта для всех' : '🔒 Закрыта для чужих';
+
+    // Динамический текст
     container.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
             `# 🌺 Твоя личная лужа\n\n` +
             `Это твоя личная лужа, ${member}!\n` +
+            `👥 **Лимит:** ${limitText} | 🚪 **Доступ:** ${accessText}\n` +
             `Используй кнопки для управления.`
         )
     );
 
     container.addSeparatorComponents(new SeparatorBuilder());
 
+    // 2. Сбалансированные цвета кнопок (серый возвращен для большинства)
     const actions = [
-        { emoji: '⚙️', label: 'Просмотреть настройки лужи',  id: 'info',     style: ButtonStyle.Secondary },
-        { emoji: '🖊️', label: 'Переименовать лужу',         id: 'name',     style: ButtonStyle.Secondary },
-        { emoji: '💬', label: 'Изменить статус лужи',        id: 'status',   style: ButtonStyle.Secondary },
-        { emoji: '👥', label: 'Изменить лимит лягушек',      id: 'limit',    style: ButtonStyle.Secondary },
-        { emoji: '🔒', label: 'Закрыть лужу для чужих',      id: 'lock',     style: ButtonStyle.Secondary },
-        { emoji: '🔓', label: 'Открыть лужу для всех',       id: 'unlock',   style: ButtonStyle.Secondary },
-        { emoji: '🌍', label: 'Сменить место обитания',      id: 'region',   style: ButtonStyle.Secondary },
-        { emoji: '⭐', label: 'Передать лужу другому',       id: 'transfer', style: ButtonStyle.Secondary },
-        { emoji: '🗑️', label: 'Высушить лужу',              id: 'delete',   style: ButtonStyle.Danger }
+        { emoji: '⚙️', label: 'Просмотреть настройки лужи',  id: 'info',     style: ButtonStyle.Secondary }, // Серая
+        { emoji: '🖊️', label: 'Переименовать лужу',         id: 'name',     style: ButtonStyle.Secondary }, // Серая
+        { emoji: '💬', label: 'Изменить статус лужи',        id: 'status',   style: ButtonStyle.Secondary }, // Серая
+        { emoji: '👥', label: 'Изменить лимит лягушек',      id: 'limit',    style: ButtonStyle.Secondary }, // Серая
+        { emoji: '🔒', label: 'Закрыть лужу для чужих',      id: 'lock',     style: ButtonStyle.Primary },   // Синяя
+        { emoji: '🔓', label: 'Открыть лужу для всех',       id: 'unlock',   style: ButtonStyle.Primary },   // Синяя
+        { emoji: '🌍', label: 'Сменить место обитания',      id: 'region',   style: ButtonStyle.Secondary }, // Серая
+        { emoji: '⭐', label: 'Передать лужу другому',       id: 'transfer', style: ButtonStyle.Success },   // Зеленая (выделяем)
+        { emoji: '🗑️', label: 'Высушить лужу',              id: 'delete',   style: ButtonStyle.Danger }     // Красная
     ];
 
     for (const action of actions) {
@@ -202,8 +221,7 @@ function buildControlPanelV2(member, roomId) {
     container.addSeparatorComponents(new SeparatorBuilder());
     container.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-            `*Используй команду \`/panel\` для повторного вызова этого меню ` +
-            `(да, прямо в этом чате)*`
+            `*Используй команду \`/panel\` для повторного вызова этого меню*`
         )
     );
 
@@ -241,7 +259,7 @@ async function refreshPanel(channel, newOwnerId) {
         if (panelMsg) {
             const newMember = await channel.guild.members.fetch(newOwnerId).catch(() => null);
             if (newMember) {
-                const newContainer = buildControlPanelV2(newMember, channel.id);
+                const newContainer = buildControlPanelV2(newMember, channel.id, channel);
                 await panelMsg.edit({
                     components: [newContainer],
                     flags: MessageFlags.IsComponentsV2
@@ -297,7 +315,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             roomOwners.set(room.id, member.id);
 
             try {
-                const container = buildControlPanelV2(member, room.id);
+                const container = buildControlPanelV2(member, room.id, room);
                 await room.send({
                     components: [container],
                     flags: MessageFlags.IsComponentsV2
@@ -395,7 +413,7 @@ client.on('interactionCreate', async (interaction) => {
             const bitrateKbps = Math.round(channel.bitrate / 1000);
 
             const embed = new EmbedBuilder()
-                .setColor(isOpen ? 0x57F287 : 0xED4245)
+                .setColor(isOpen ? 0x2E8B57 : 0xED4245) // Приглушенный зеленый или красный
                 .setAuthor({
                     name: 'Настройки лужи',
                     iconURL: client.user.displayAvatarURL()
@@ -492,11 +510,11 @@ client.on('interactionCreate', async (interaction) => {
             const select = new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
                     .setCustomId(`region_select_${channelId}`)
-                    .setPlaceholder('Выбери место обитания')
+                    .setPlaceholder('Выбери новое место обитания')
                     .addOptions(REGIONS.map(r => ({ label: r.label, value: r.value })).slice(0, 25))
             );
             return interaction.reply({
-                content: '🌍 Выбери новое место обитания для своей лужи:',
+                content: '🌍 Выбери новое место обитания:',
                 components: [select],
                 flags: MessageFlags.Ephemeral
             });
@@ -504,6 +522,7 @@ client.on('interactionCreate', async (interaction) => {
 
         if (customId.startsWith('lock_')) {
             await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, { ViewChannel: false });
+            refreshPanel(channel, ownerId); // Обновляем панель
             return interaction.reply({
                 content: '🔒 Лужа закрыта для чужих.',
                 flags: MessageFlags.Ephemeral
@@ -512,8 +531,9 @@ client.on('interactionCreate', async (interaction) => {
 
         if (customId.startsWith('unlock_')) {
             await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, { ViewChannel: true, Connect: true });
+            refreshPanel(channel, ownerId); // Обновляем панель
             return interaction.reply({
-                content: '🔓 Лужа открыта для всех — заплывайте!',
+                content: '🔓 Лужа открыта для всех!',
                 flags: MessageFlags.Ephemeral
             });
         }
@@ -733,6 +753,8 @@ client.on('interactionCreate', async (interaction) => {
                     });
                 }
 
+                refreshPanel(channel, ownerId); // Обновляем панель
+
                 return interaction.reply({
                     content: limit === 0
                         ? '👥 Лимит снят — в лужу может заплыть сколько угодно лягушек.'
@@ -813,7 +835,7 @@ client.on('interactionCreate', async (interaction) => {
                 }
 
                 try {
-                    const container = buildControlPanelV2(member, voiceChannel.id);
+                    const container = buildControlPanelV2(member, voiceChannel.id, voiceChannel); 
                     await voiceChannel.send({
                         components: [container],
                         flags: MessageFlags.IsComponentsV2
