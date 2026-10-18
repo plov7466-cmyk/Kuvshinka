@@ -1,10 +1,15 @@
-FROM node:24-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
+# Копируем файлы зависимостей
 COPY package*.json ./
-RUN npm install --omit=dev
 
+# Устанавливаем зависимости
+RUN npm install
+
+# Копируем остальные файлы проекта
 COPY . .
 
+# Запускаем бота
 CMD ["node", "bot.js"]
