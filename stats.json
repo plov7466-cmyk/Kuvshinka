@@ -187,7 +187,7 @@
     "currentRole": "икра"
   },
   "773871220268990485": {
-    "voiceSeconds": 97296,
+    "voiceSeconds": 97522,
     "days": {
       "2026-09-23": {
         "messages": 1,
@@ -210,6 +210,9 @@
       },
       "2026-10-11": {
         "voiceSeconds": 860
+      },
+      "2026-10-18": {
+        "voiceSeconds": 226
       }
     },
     "lastSeen": "2026-09-23",
