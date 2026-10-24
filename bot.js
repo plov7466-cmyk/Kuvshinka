@@ -11,7 +11,7 @@ const {
     Client, GatewayIntentBits, ChannelType, ActionRowBuilder, ButtonBuilder,
     ButtonStyle, StringSelectMenuBuilder, MessageFlags, EmbedBuilder, Options,
     ContainerBuilder, TextDisplayBuilder, SectionBuilder, SeparatorBuilder,
-    MediaGalleryBuilder, MediaGalleryItemBuilder,
+    MediaGalleryBuilder, MediaGalleryItemBuilder, ThumbnailBuilder, // <-- Добавлен ThumbnailBuilder
     ModalBuilder, TextInputBuilder, TextInputStyle
 } = require('discord.js');
 
@@ -29,13 +29,14 @@ app.get('/', (req, res) => res.send('Кувшинка онлайн'));
 app.listen(PORT, () => console.log(`HTTP-сервер запущен на порту ${PORT}`));
 
 // =========================
-// 🐸 КЛИЕНТ С ОПТИМИЗАЦИЕЙ
+// 🐸 КЛИЕНТ
 // =========================
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildVoiceStates
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildEmojisAndStickers
     ],
 
     makeCache: Options.cacheWithLimits({
@@ -59,9 +60,6 @@ const client = new Client({
     }
 });
 
-// =========================
-// 📝 ИНИЦИАЛИЗАЦИЯ VC STATUS
-// =========================
 client.vcStatus = new DiscordVCStatus(client);
 
 // =========================
@@ -72,8 +70,61 @@ const WELCOME_CHANNEL_ID = '1510063211099983902';
 const CREATE_ROOM_CHANNEL_ID = '1518746457988010045';
 const ROOM_SUFFIX = "'s Лужа";
 const ROOM_IMAGE_URL = 'https://i.postimg.cc/4d1g8Rq8/photo-2026-10-11-00-45-20.jpg';
+const FROG_IMAGE_URL = 'https://i.postimg.cc/6pWhkxdj/Milyj-lagusonok-sredi-kuvsinok.png';
+
+// =========================
+// 🎨 ID КАСТОМНЫХ ЭМОДЗИ
+// =========================
+const EMOJI_SETTINGS = '1561708488990785556';
+const EMOJI_PENCIL   = '1561708531122446356';
+const EMOJI_SPEECH   = '1561708575154376734';
+const EMOJI_FROGS    = '1561711882027663370';
+const EMOJI_LOCK     = '1561708661473280020';
+const EMOJI_UNLOCK   = '1561708698257203280';
+const EMOJI_GLOBE    = '1561708784852668496';
+const EMOJI_TRANSFER = '1561711719858966718';
+const EMOJI_TRASH    = '1561711760548040764';
+
+function emojiFor(id) {
+    let e = client.emojis.cache.get(id);
+    if (!e) {
+        for (const guild of client.guilds.cache.values()) {
+            e = guild.emojis.cache.get(id);
+            if (e) break;
+        }
+    }
+    return e ? `<:${e.name}:${e.id}>` : '';
+}
+
+function eSettings() { return emojiFor(EMOJI_SETTINGS); }
+function ePencil()   { return emojiFor(EMOJI_PENCIL); }
+function eSpeech()   { return emojiFor(EMOJI_SPEECH); }
+function eFrogs()    { return emojiFor(EMOJI_FROGS); }
+function eLock()     { return emojiFor(EMOJI_LOCK); }
+function eUnlock()   { return emojiFor(EMOJI_UNLOCK); }
+function eGlobe()    { return emojiFor(EMOJI_GLOBE); }
+function eTransfer() { return emojiFor(EMOJI_TRANSFER); }
+function eTrash()    { return emojiFor(EMOJI_TRASH); }
 
 const roomOwners = new Map();
+
+function setRoomOwner(channelId, ownerId) {
+    roomOwners.set(channelId, ownerId);
+    stats.setRoomOwner(channelId, ownerId);
+}
+
+function removeRoomOwner(channelId) {
+    roomOwners.delete(channelId);
+    stats.removeRoom(channelId);
+}
+
+function isRoom(channelId) {
+    return roomOwners.has(channelId);
+}
+
+for (const [channelId, ownerId] of Object.entries(stats.getRooms())) {
+    roomOwners.set(channelId, ownerId);
+}
 
 const REGIONS = [
     { label: 'Автоматический выбор', value: 'auto' },
@@ -97,6 +148,12 @@ const REGIONS = [
 client.once('clientReady', async () => {
     console.log(`Кувшинка запущена как ${client.user.tag}`);
     logMemory('при запуске');
+
+    for (const guild of client.guilds.cache.values()) {
+        await guild.emojis.fetch().catch(() => {});
+    }
+
+    await cleanupStaleRooms();
 
     setInterval(() => logMemory('периодическая проверка'), 10 * 60 * 1000);
 
@@ -127,6 +184,31 @@ function logMemory(label = '') {
     console.log(`📊 [${label}] RSS: ${mb(used.rss)} MB | Heap: ${mb(used.heapUsed)}/${mb(used.heapTotal)} MB`);
 }
 
+async function cleanupStaleRooms() {
+    let removed = 0;
+    for (const guild of client.guilds.cache.values()) {
+        const channels = await guild.channels.fetch().catch(() => null);
+        if (!channels) continue;
+
+        const validIds = new Set();
+        for (const ch of channels.values()) {
+            if (ch && ch.type === ChannelType.GuildVoice && roomOwners.has(ch.id)) {
+                validIds.add(ch.id);
+            }
+        }
+
+        for (const channelId of [...roomOwners.keys()]) {
+            if (!channels.has(channelId) || !validIds.has(channelId)) {
+                removeRoomOwner(channelId);
+                removed++;
+            }
+        }
+    }
+    if (removed > 0) {
+        console.log(`🧹 Удалено устаревших записей о лужах: ${removed}`);
+    }
+}
+
 // =========================
 // 👋 ПРИВЕТСТВИЕ
 // =========================
@@ -150,10 +232,9 @@ client.on('guildMemberAdd', async (member) => {
 // =========================
 // 🔧 ПАНЕЛЬ (Components V2)
 // =========================
-function buildControlPanelV2(member, roomId, channel) {
-    // 1. Благородный приглушенный изумрудный акцент (не вырвиглазный)
+function buildControlPanelV2(member, roomId) {
     const container = new ContainerBuilder()
-        .setAccentColor(0x2E8B57); // SeaGreen
+        .setAccentColor(0x2E8B57);
 
     container.addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems(
@@ -163,66 +244,58 @@ function buildControlPanelV2(member, roomId, channel) {
         )
     );
 
-    // Получаем текущий лимит из канала
-    const currentLimit = channel ? channel.userLimit : 0;
-    const limitText = currentLimit === 0 ? 'без лимита' : `${currentLimit} чел.`;
-
-    // Проверяем, открыт ли канал для @everyone
-    let isOpen = true;
-    if (channel && channel.guild) {
-        const everyone = channel.guild.roles.everyone;
-        const overwrite = channel.permissionOverwrites.cache.get(everyone.id);
-        if (overwrite) {
-            isOpen = overwrite.allow.has('ViewChannel') || overwrite.allow.has('Connect');
-        }
-    }
-    const accessText = isOpen ? '🔓 Открыта для всех' : '🔒 Закрыта для чужих';
-
-    // Динамический текст
     container.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
             `# 🌺 Твоя личная лужа\n\n` +
             `Это твоя личная лужа, ${member}!\n` +
-            `👥 **Лимит:** ${limitText} | 🚪 **Доступ:** ${accessText}\n` +
             `Используй кнопки для управления.`
         )
     );
 
     container.addSeparatorComponents(new SeparatorBuilder());
 
-    // 2. Сбалансированные цвета кнопок (серый возвращен для большинства)
     const actions = [
-        { emoji: '⚙️', label: 'Просмотреть настройки лужи',  id: 'info',     style: ButtonStyle.Secondary }, // Серая
-        { emoji: '🖊️', label: 'Переименовать лужу',         id: 'name',     style: ButtonStyle.Secondary }, // Серая
-        { emoji: '💬', label: 'Изменить статус лужи',        id: 'status',   style: ButtonStyle.Secondary }, // Серая
-        { emoji: '👥', label: 'Изменить лимит лягушек',      id: 'limit',    style: ButtonStyle.Secondary }, // Серая
-        { emoji: '🔒', label: 'Закрыть лужу для чужих',      id: 'lock',     style: ButtonStyle.Primary },   // Синяя
-        { emoji: '🔓', label: 'Открыть лужу для всех',       id: 'unlock',   style: ButtonStyle.Primary },   // Синяя
-        { emoji: '🌍', label: 'Сменить место обитания',      id: 'region',   style: ButtonStyle.Secondary }, // Серая
-        { emoji: '⭐', label: 'Передать лужу другому',       id: 'transfer', style: ButtonStyle.Success },   // Зеленая (выделяем)
-        { emoji: '🗑️', label: 'Высушить лужу',              id: 'delete',   style: ButtonStyle.Danger }     // Красная
+        { id: 'info',     label: 'Просмотреть настройки лужи', emojiId: EMOJI_SETTINGS, style: ButtonStyle.Secondary },
+        { id: 'name',     label: 'Переименовать лужу',         emojiId: EMOJI_PENCIL,   style: ButtonStyle.Secondary },
+        { id: 'status',   label: 'Изменить статус лужи',        emojiId: EMOJI_SPEECH,   style: ButtonStyle.Secondary },
+        { id: 'limit',    label: 'Изменить лимит лягушек',      emojiId: EMOJI_FROGS,    style: ButtonStyle.Secondary },
+        { id: 'lock',     label: 'Закрыть лужу для чужих',      emojiId: EMOJI_LOCK,     style: ButtonStyle.Secondary },
+        { id: 'unlock',   label: 'Открыть лужу для всех',       emojiId: EMOJI_UNLOCK,   style: ButtonStyle.Secondary },
+        { id: 'region',   label: 'Сменить место обитания',      emojiId: EMOJI_GLOBE,    style: ButtonStyle.Secondary },
+        { id: 'transfer', label: 'Передать лужу другому',       emojiId: EMOJI_TRANSFER, style: ButtonStyle.Secondary },
+        { id: 'delete',   label: 'Высушить лужу',               emojiId: EMOJI_TRASH,    style: ButtonStyle.Secondary }
     ];
 
     for (const action of actions) {
+        const btn = new ButtonBuilder()
+            .setCustomId(`${action.id}_${roomId}`)
+            .setStyle(action.style)
+            .setEmoji({ id: action.emojiId });
+
         container.addSectionComponents(
             new SectionBuilder()
                 .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent(`${action.emoji} — ${action.label}`)
+                    new TextDisplayBuilder().setContent(action.label)
                 )
-                .setButtonAccessory(
-                    new ButtonBuilder()
-                        .setCustomId(`${action.id}_${roomId}`)
-                        .setEmoji(action.emoji)
-                        .setStyle(action.style)
-                )
+                .setButtonAccessory(btn)
         );
     }
 
     container.addSeparatorComponents(new SeparatorBuilder());
-    container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-            `*Используй команду \`/panel\` для повторного вызова этого меню*`
-        )
+
+    // === НИЖНЯЯ ЧАСТЬ: ТЕКСТ СЛЕВА, КАРТИНКА СПРАВА ===
+    const frogThumbnail = new ThumbnailBuilder()
+        .setURL(FROG_IMAGE_URL)
+        .setDescription('Лягушонок');
+
+    container.addSectionComponents(
+        new SectionBuilder()
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                    `*Используй команду \`/panel\` для повторного вызова этого меню*`
+                )
+            )
+            .setThumbnailAccessory(frogThumbnail)
     );
 
     return container;
@@ -239,13 +312,13 @@ async function transferOwnership(channel, oldId, newId, auto = false) {
             }).catch(() => {});
         }
         await channel.permissionOverwrites.edit(newId, { ManageChannels: true, MoveMembers: true });
-        roomOwners.set(channel.id, newId);
+        setRoomOwner(channel.id, newId);
 
         await refreshPanel(channel, newId);
 
         await channel.send(auto
-            ? `⭐ Владелец покинул лужу. Владение автоматически передано <@${newId}>.`
-            : `⭐ Владение передано участнику <@${newId}>.`
+            ? `${eTransfer()} Владелец покинул лужу. Владение автоматически передано <@${newId}>.`
+            : `${eTransfer()} Владение передано участнику <@${newId}>.`
         ).catch(() => {});
     } catch (e) {
         console.error('transferOwnership:', e);
@@ -259,7 +332,7 @@ async function refreshPanel(channel, newOwnerId) {
         if (panelMsg) {
             const newMember = await channel.guild.members.fetch(newOwnerId).catch(() => null);
             if (newMember) {
-                const newContainer = buildControlPanelV2(newMember, channel.id, channel);
+                const newContainer = buildControlPanelV2(newMember, channel.id);
                 await panelMsg.edit({
                     components: [newContainer],
                     flags: MessageFlags.IsComponentsV2
@@ -286,17 +359,23 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             }
         }
 
-        // ====== Создание личной лужи ======
         if (newState.channelId === CREATE_ROOM_CHANNEL_ID && oldState.channelId !== CREATE_ROOM_CHANNEL_ID) {
             const member = newState.member;
             if (!member) return;
 
-            const existing = newState.guild.channels.cache.find(
-                c => c.name === `${member.displayName}${ROOM_SUFFIX}` && c.type === ChannelType.GuildVoice
-            );
-            if (existing && existing.members.size === 0) {
-                await member.voice.setChannel(existing).catch(() => {});
-                return;
+            const existingOwned = [...roomOwners.entries()].find(([, owner]) => owner === member.id);
+            if (existingOwned) {
+                const existingChannel = newState.guild.channels.cache.get(existingOwned[0])
+                    || await newState.guild.channels.fetch(existingOwned[0]).catch(() => null);
+
+                if (existingChannel && existingChannel.type === ChannelType.GuildVoice) {
+                    if (existingChannel.members.size === 0) {
+                        await member.voice.setChannel(existingChannel).catch(() => {});
+                        return;
+                    }
+                } else {
+                    removeRoomOwner(existingOwned[0]);
+                }
             }
 
             const room = await newState.guild.channels.create({
@@ -312,10 +391,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 MoveMembers: true
             }).catch(() => {});
 
-            roomOwners.set(room.id, member.id);
+            setRoomOwner(room.id, member.id);
 
             try {
-                const container = buildControlPanelV2(member, room.id, room);
+                const container = buildControlPanelV2(member, room.id);
                 await room.send({
                     components: [container],
                     flags: MessageFlags.IsComponentsV2
@@ -329,10 +408,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
         if (oldState.channelId === newState.channelId) return;
 
-        // ====== Удаление / передача лужи ======
         const oldChannel = oldState.channel;
-        if (oldChannel && oldChannel.id !== CREATE_ROOM_CHANNEL_ID &&
-            oldChannel.type === ChannelType.GuildVoice && oldChannel.name.endsWith(ROOM_SUFFIX)) {
+        if (oldChannel &&
+            oldChannel.id !== CREATE_ROOM_CHANNEL_ID &&
+            oldChannel.type === ChannelType.GuildVoice &&
+            isRoom(oldChannel.id)) {
 
             const prevOwnerId = roomOwners.get(oldChannel.id);
             const ownerLeft = prevOwnerId && oldState.member?.id === prevOwnerId;
@@ -341,7 +421,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 try {
                     const fresh = await oldChannel.fetch();
                     if (fresh.members.size === 0) {
-                        roomOwners.delete(fresh.id);
+                        removeRoomOwner(fresh.id);
                         await fresh.delete();
                         return;
                     }
@@ -370,7 +450,7 @@ client.on('interactionCreate', async (interaction) => {
         }
 
         const channel = interaction.channel;
-        if (!channel?.name?.endsWith(ROOM_SUFFIX)) {
+        if (!channel || !isRoom(channel.id)) {
             return interaction.reply({
                 content: '🌊 Это не лужа — здесь нет кнопок Кувшинки.',
                 flags: MessageFlags.Ephemeral
@@ -387,7 +467,6 @@ client.on('interactionCreate', async (interaction) => {
             });
         }
 
-        // ⚙️ Просмотр настроек лужи
         if (customId.startsWith('info_')) {
             const limitValue = channel.userLimit;
             const limitText = limitValue === 0 ? 'без лимита' : `${limitValue}`;
@@ -401,7 +480,6 @@ client.on('interactionCreate', async (interaction) => {
                 ? REGIONS.find(r => r.value === channel.rtcRegion)?.label || channel.rtcRegion
                 : 'Автоматически';
 
-            // Проверяем, открыт ли канал для @everyone
             const everyone = interaction.guild.roles.everyone;
             const overwrite = channel.permissionOverwrites.cache.get(everyone.id);
             const isOpen = overwrite
@@ -413,7 +491,7 @@ client.on('interactionCreate', async (interaction) => {
             const bitrateKbps = Math.round(channel.bitrate / 1000);
 
             const embed = new EmbedBuilder()
-                .setColor(isOpen ? 0x2E8B57 : 0xED4245) // Приглушенный зеленый или красный
+                .setColor(isOpen ? 0x2E8B57 : 0xED4245)
                 .setAuthor({
                     name: 'Настройки лужи',
                     iconURL: client.user.displayAvatarURL()
@@ -422,11 +500,11 @@ client.on('interactionCreate', async (interaction) => {
                 .setThumbnail(ROOM_IMAGE_URL)
                 .addFields(
                     {
-                        name: '📋 Основное',
+                        name: `${eSettings()} Основное`,
                         value:
-                            `⭐ **Владелец:** <@${ownerId}>\n` +
-                            `👥 **Заполнение:** ${membersArr.size} / ${limitText}\n` +
-                            `🌍 **Регион:** ${regionText}\n` +
+                            `${eTransfer()} **Владелец:** <@${ownerId}>\n` +
+                            `${eFrogs()} **Заполнение:** ${membersArr.size} / ${limitText}\n` +
+                            `${eGlobe()} **Регион:** ${regionText}\n` +
                             `🎚️ **Битрейт:** ${bitrateKbps} kbps`,
                         inline: false
                     },
@@ -436,8 +514,10 @@ client.on('interactionCreate', async (interaction) => {
                         inline: false
                     },
                     {
-                        name: '🚪 Доступ',
-                        value: isOpen ? '🔓 Открыта для всех' : '🔒 Закрыта от посторонних',
+                        name: `🚪 Доступ`,
+                        value: isOpen
+                            ? `${eUnlock()} Открыта для всех`
+                            : `${eLock()} Закрыта от посторонних`,
                         inline: false
                     }
                 )
@@ -514,7 +594,7 @@ client.on('interactionCreate', async (interaction) => {
                     .addOptions(REGIONS.map(r => ({ label: r.label, value: r.value })).slice(0, 25))
             );
             return interaction.reply({
-                content: '🌍 Выбери новое место обитания:',
+                content: `${eGlobe()} Выбери новое место обитания:`,
                 components: [select],
                 flags: MessageFlags.Ephemeral
             });
@@ -522,18 +602,18 @@ client.on('interactionCreate', async (interaction) => {
 
         if (customId.startsWith('lock_')) {
             await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, { ViewChannel: false });
-            refreshPanel(channel, ownerId); // Обновляем панель
+            refreshPanel(channel, ownerId);
             return interaction.reply({
-                content: '🔒 Лужа закрыта для чужих.',
+                content: `${eLock()} Лужа закрыта для чужих.`,
                 flags: MessageFlags.Ephemeral
             });
         }
 
         if (customId.startsWith('unlock_')) {
             await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, { ViewChannel: true, Connect: true });
-            refreshPanel(channel, ownerId); // Обновляем панель
+            refreshPanel(channel, ownerId);
             return interaction.reply({
-                content: '🔓 Лужа открыта для всех!',
+                content: `${eUnlock()} Лужа открыта для всех!`,
                 flags: MessageFlags.Ephemeral
             });
         }
@@ -553,7 +633,7 @@ client.on('interactionCreate', async (interaction) => {
                     .addOptions(inVoice.map(m => ({ label: m.displayName, value: m.id })).slice(0, 25))
             );
             return interaction.reply({
-                content: '⭐ Выбери, кому передать лужу:',
+                content: `${eTransfer()} Выбери, кому передать лужу:`,
                 components: [select],
                 flags: MessageFlags.Ephemeral
             });
@@ -561,10 +641,10 @@ client.on('interactionCreate', async (interaction) => {
 
         if (customId.startsWith('delete_')) {
             await interaction.reply({
-                content: '🗑️ Лужа высыхает...',
+                content: `${eTrash()} Лужа высыхает...`,
                 flags: MessageFlags.Ephemeral
             });
-            roomOwners.delete(channelId);
+            removeRoomOwner(channelId);
             await channel.delete().catch(() => {});
         }
     } catch (e) {
@@ -667,14 +747,14 @@ function buildTopButtons(metric, page, totalPages) {
 }
 
 // =========================
-// 📋 СПИСКИ + МОДАЛКИ + СЛЕШ-КОМАНДЫ
+// 📋 МОДАЛКИ + СЛЕШ-КОМАНДЫ + СЕЛЕКТЫ
 // =========================
 client.on('interactionCreate', async (interaction) => {
     try {
         if (interaction.isModalSubmit()) {
             const customId = interaction.customId;
             const channel = interaction.channel;
-            if (!channel?.name?.endsWith(ROOM_SUFFIX)) return;
+            if (!channel || !isRoom(channel.id)) return;
 
             const channelId = channel.id;
             const ownerId = roomOwners.get(channelId);
@@ -704,7 +784,7 @@ client.on('interactionCreate', async (interaction) => {
                     });
                 }
                 return interaction.reply({
-                    content: `🖊️ Лужа переименована в **${raw}**.`,
+                    content: `${ePencil()} Лужа переименована в **${raw}**.`,
                     flags: MessageFlags.Ephemeral
                 });
             }
@@ -727,7 +807,7 @@ client.on('interactionCreate', async (interaction) => {
                     });
                 }
                 return interaction.reply({
-                    content: `💬 Статус лужи обновлён: **${raw}**`,
+                    content: `${eSpeech()} Статус лужи обновлён: **${raw}**`,
                     flags: MessageFlags.Ephemeral
                 });
             }
@@ -753,12 +833,12 @@ client.on('interactionCreate', async (interaction) => {
                     });
                 }
 
-                refreshPanel(channel, ownerId); // Обновляем панель
+                refreshPanel(channel, ownerId);
 
                 return interaction.reply({
                     content: limit === 0
-                        ? '👥 Лимит снят — в лужу может заплыть сколько угодно лягушек.'
-                        : `👥 Лимит установлен: **${limit}** лягушек.`,
+                        ? `${eFrogs()} Лимит снят — в лужу может заплыть сколько угодно лягушек.`
+                        : `${eFrogs()} Лимит установлен: **${limit}** лягушек.`,
                     flags: MessageFlags.Ephemeral
                 });
             }
@@ -788,8 +868,7 @@ client.on('interactionCreate', async (interaction) => {
                             `🐸 **Твой статус:**\n\n` +
                             `🏆 Текущая роль: **${excludedRole.name}**\n\n` +
                             `🌿 Эволюция тебе недоступна — ты уже достиг(ла) высшей ступени Пруда.`,
-                        flags: MessageFlags.Ephemeral
-                    });
+                        flags: MessageFlags.Ephemeral                    });
                 }
 
                 const days = stats.getActiveDays(userId);
@@ -819,7 +898,7 @@ client.on('interactionCreate', async (interaction) => {
                     });
                 }
 
-                if (!voiceChannel.name.endsWith(ROOM_SUFFIX)) {
+                if (!isRoom(voiceChannel.id)) {
                     return interaction.reply({
                         content: '🌊 Это не лужа — здесь нет панели Кувшинки.',
                         flags: MessageFlags.Ephemeral
@@ -835,7 +914,7 @@ client.on('interactionCreate', async (interaction) => {
                 }
 
                 try {
-                    const container = buildControlPanelV2(member, voiceChannel.id, voiceChannel); 
+                    const container = buildControlPanelV2(member, voiceChannel.id);
                     await voiceChannel.send({
                         components: [container],
                         flags: MessageFlags.IsComponentsV2
@@ -860,7 +939,7 @@ client.on('interactionCreate', async (interaction) => {
 
         const customId = interaction.customId;
         const channel = interaction.channel;
-        if (!channel?.name?.endsWith(ROOM_SUFFIX)) return;
+        if (!channel || !isRoom(channel.id)) return;
 
         const channelId = channel.id;
         const ownerId = roomOwners.get(channelId);
@@ -882,7 +961,7 @@ client.on('interactionCreate', async (interaction) => {
             }
 
             await interaction.update({
-                content: `⭐ Передаю лужу ${newOwner}...`,
+                content: `${eTransfer()} Передаю лужу ${newOwner}...`,
                 components: []
             });
             try {
@@ -922,7 +1001,7 @@ client.on('interactionCreate', async (interaction) => {
 
             const label = REGIONS.find(r => r.value === value)?.label || value;
             return interaction.update({
-                content: `🌍 Место обитания изменено на **${label}**.`,
+                content: `${eGlobe()} Место обитания изменено на **${label}**.`,
                 components: []
             });
         }
@@ -980,7 +1059,7 @@ function getDisplayRole(member) {
 }
 
 // =========================
-// 🐸 ЭВОЛЮЦИЯ — один участник
+// 🐸 ЭВОЛЮЦИЯ
 // =========================
 async function checkMemberEvolution(member) {
     if (!member || member.user.bot) return;
@@ -1042,9 +1121,6 @@ async function checkMemberEvolution(member) {
     }
 }
 
-// =========================
-// 🐸 ЭВОЛЮЦИЯ — полная синхронизация
-// =========================
 async function fullSync(client) {
     try {
         console.log('🔄 Полная синхронизация эволюции...');
@@ -1078,11 +1154,15 @@ async function shutdown(signal) {
             const channels = await guild.channels.fetch().catch(() => null);
             if (!channels) continue;
             for (const channel of channels.values()) {
-                if (channel?.name?.endsWith(ROOM_SUFFIX) &&
+                if (channel &&
+                    isRoom(channel.id) &&
                     channel.type === ChannelType.GuildVoice &&
                     channel.members?.size === 0) {
                     const ok = await channel.delete().then(() => true).catch(() => false);
-                    if (ok) { deleted++; roomOwners.delete(channel.id); }
+                    if (ok) {
+                        deleted++;
+                        removeRoomOwner(channel.id);
+                    }
                 }
             }
         }

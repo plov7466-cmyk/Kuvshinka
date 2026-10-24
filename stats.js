@@ -3,6 +3,7 @@ const path = require('path');
 const config = require('./config');
 
 const STATS_FILE = path.join(__dirname, 'stats.json');
+const ROOMS_FILE = path.join(__dirname, 'rooms.json');
 
 let data = {};
 try {
@@ -12,6 +13,43 @@ try {
 } catch (e) {
     console.error('Не удалось загрузить stats.json:', e);
     data = {};
+}
+
+// =========================
+// ХРАНИЛИЩЕ ВЛАДЕЛЬЦЕВ ЛУЖ
+// =========================
+let rooms = {};
+try {
+    if (fs.existsSync(ROOMS_FILE)) {
+        rooms = JSON.parse(fs.readFileSync(ROOMS_FILE, 'utf8'));
+    }
+} catch (e) {
+    console.error('Не удалось загрузить rooms.json:', e);
+    rooms = {};
+}
+
+function saveRooms() {
+    try {
+        fs.writeFileSync(ROOMS_FILE, JSON.stringify(rooms, null, 2), 'utf8');
+    } catch (e) {
+        console.error('Не удалось сохранить rooms.json:', e);
+    }
+}
+
+function setRoomOwner(channelId, ownerId) {
+    rooms[channelId] = ownerId;
+    saveRooms();
+}
+
+function removeRoom(channelId) {
+    if (rooms[channelId] !== undefined) {
+        delete rooms[channelId];
+        saveRooms();
+    }
+}
+
+function getRooms() {
+    return rooms;
 }
 
 const activeVoice = new Map();
@@ -50,7 +88,6 @@ function startVoice(userId) {
     if (!activeVoice.has(userId)) activeVoice.set(userId, Date.now());
 }
 
-// Возвращает true, если сессия была записана (>= 10 сек)
 function endVoice(userId) {
     if (!activeVoice.has(userId)) return false;
     const start = activeVoice.get(userId);
@@ -141,5 +178,6 @@ function formatTime(seconds) {
 module.exports = {
     startVoice, endVoice,
     getActiveDays, getVoiceHours, getEligibleRole,
-    getTop, formatTime, saveStats, getUser
+    getTop, formatTime, saveStats, getUser,
+    setRoomOwner, removeRoom, getRooms
 };

@@ -20,7 +20,7 @@
     "currentRole": "икра"
   },
   "731541159859454135": {
-    "voiceSeconds": 106979,
+    "voiceSeconds": 68184,
     "days": {
       "2026-10-05": {
         "voiceSeconds": 13541
@@ -30,32 +30,26 @@
       },
       "2026-10-07": {
         "voiceSeconds": 11258
-      },
-      "2026-10-18": {
-        "voiceSeconds": 38795
       }
     },
     "lastSeen": null,
     "currentRole": "икра"
   },
   "255735812841406464": {
-    "voiceSeconds": 78864,
+    "voiceSeconds": 65039,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 28742
       },
       "2026-10-04": {
         "voiceSeconds": 36297
-      },
-      "2026-10-18": {
-        "voiceSeconds": 13825
       }
     },
     "lastSeen": null,
     "currentRole": "икра"
   },
   "335849962107568128": {
-    "voiceSeconds": 162957,
+    "voiceSeconds": 135104,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 27122
@@ -71,12 +65,6 @@
       },
       "2026-10-07": {
         "voiceSeconds": 4177
-      },
-      "2026-10-18": {
-        "voiceSeconds": 23053
-      },
-      "2026-10-19": {
-        "voiceSeconds": 4800
       }
     },
     "lastSeen": null,
@@ -107,7 +95,7 @@
     "currentRole": "икра"
   },
   "410116245728526346": {
-    "voiceSeconds": 101955,
+    "voiceSeconds": 89637,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 11013
@@ -120,9 +108,6 @@
       },
       "2026-10-06": {
         "voiceSeconds": 22508
-      },
-      "2026-10-18": {
-        "voiceSeconds": 12318
       }
     },
     "lastSeen": null,
@@ -135,7 +120,7 @@
     "currentRole": "икра"
   },
   "1035570723923710012": {
-    "voiceSeconds": 99385,
+    "voiceSeconds": 89286,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 19312
@@ -151,55 +136,42 @@
       },
       "2026-10-11": {
         "voiceSeconds": 45
-      },
-      "2026-10-18": {
-        "voiceSeconds": 10099
       }
     },
     "lastSeen": null,
     "currentRole": "икра"
   },
   "1498957554644942948": {
-    "voiceSeconds": 7814,
-    "days": {
-      "2026-10-18": {
-        "voiceSeconds": 7814
-      }
-    },
+    "voiceSeconds": 0,
+    "days": {},
     "lastSeen": null,
     "currentRole": "икра"
   },
   "1502130384324788295": {
-    "voiceSeconds": 31122,
+    "voiceSeconds": 14024,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 14024
-      },
-      "2026-10-19": {
-        "voiceSeconds": 17098
       }
     },
     "lastSeen": null,
     "currentRole": "икра"
   },
   "139859185289396224": {
-    "voiceSeconds": 4415,
+    "voiceSeconds": 4066,
     "days": {
       "2026-10-05": {
         "voiceSeconds": 553
       },
       "2026-10-07": {
         "voiceSeconds": 3513
-      },
-      "2026-10-18": {
-        "voiceSeconds": 349
       }
     },
     "lastSeen": null,
     "currentRole": "икра"
   },
   "655822853983174656": {
-    "voiceSeconds": 33808,
+    "voiceSeconds": 33309,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 4007
@@ -209,16 +181,13 @@
       },
       "2026-10-07": {
         "voiceSeconds": 11011
-      },
-      "2026-10-19": {
-        "voiceSeconds": 499
       }
     },
     "lastSeen": null,
     "currentRole": "икра"
   },
   "773871220268990485": {
-    "voiceSeconds": 118765,
+    "voiceSeconds": 97844,
     "days": {
       "2026-09-23": {
         "messages": 1,
@@ -243,10 +212,10 @@
         "voiceSeconds": 860
       },
       "2026-10-18": {
-        "voiceSeconds": 18751
+        "voiceSeconds": 226
       },
       "2026-10-19": {
-        "voiceSeconds": 2718
+        "voiceSeconds": 322
       }
     },
     "lastSeen": "2026-09-23",
@@ -322,7 +291,7 @@
     "currentRole": "икра"
   },
   "931979002099413022": {
-    "voiceSeconds": 182280,
+    "voiceSeconds": 136848,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 29938
@@ -338,12 +307,6 @@
       },
       "2026-10-07": {
         "voiceSeconds": 3833
-      },
-      "2026-10-18": {
-        "voiceSeconds": 28308
-      },
-      "2026-10-19": {
-        "voiceSeconds": 17124
       }
     },
     "lastSeen": null,
@@ -356,7 +319,7 @@
     "currentRole": "икра"
   },
   "1019129646085845074": {
-    "voiceSeconds": 94426,
+    "voiceSeconds": 56107,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 6901
@@ -369,9 +332,6 @@
       },
       "2026-10-06": {
         "voiceSeconds": 21832
-      },
-      "2026-10-18": {
-        "voiceSeconds": 38319
       }
     },
     "lastSeen": null,
@@ -396,7 +356,7 @@
     "currentRole": "икра"
   },
   "651783297264779265": {
-    "voiceSeconds": 77951,
+    "voiceSeconds": 63034,
     "days": {
       "2026-10-03": {
         "voiceSeconds": 13118
@@ -412,12 +372,6 @@
       },
       "2026-10-07": {
         "voiceSeconds": 95
-      },
-      "2026-10-18": {
-        "voiceSeconds": 12755
-      },
-      "2026-10-19": {
-        "voiceSeconds": 2162
       }
     },
     "lastSeen": null,
