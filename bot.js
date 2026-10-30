@@ -11,7 +11,7 @@ const {
     Client, GatewayIntentBits, ChannelType, ActionRowBuilder, ButtonBuilder,
     ButtonStyle, StringSelectMenuBuilder, MessageFlags, EmbedBuilder, Options,
     ContainerBuilder, TextDisplayBuilder, SectionBuilder, SeparatorBuilder,
-    MediaGalleryBuilder, MediaGalleryItemBuilder, ThumbnailBuilder, // <-- Добавлен ThumbnailBuilder
+    MediaGalleryBuilder, MediaGalleryItemBuilder, ThumbnailBuilder,
     ModalBuilder, TextInputBuilder, TextInputStyle
 } = require('discord.js');
 
@@ -61,6 +61,22 @@ const client = new Client({
 });
 
 client.vcStatus = new DiscordVCStatus(client);
+
+// =========================
+// 🆕 ЗАГЛУШКИ ФУНКЦИЙ (эволюция / рейтинг)
+// =========================
+const DISABLED_MESSAGE = '🌾 **Временно недоступно.** Эта функция сейчас на профилактике в Пруду — загляни позже. 🐸';
+
+// заглушка эволюции: больше не вызывает stats-функции
+async function checkMemberEvolution(member) {
+    // отключено: ничего не делаем, чтобы не нагружать stats
+    return;
+}
+
+// заглушка полной синхронизации (если fullSync где-то импортировался)
+async function fullSync() {
+    return;
+}
 
 // =========================
 // 🐸 НАСТРОЙКИ
@@ -154,9 +170,11 @@ client.once('clientReady', async () => {
     }
 
     await cleanupStaleRooms();
+    await checkCreateRoomOnStartup();
 
     setInterval(() => logMemory('периодическая проверка'), 10 * 60 * 1000);
 
+    // 🆕 синхронизация отключена (fullSync — заглушка)
     const FULL_SYNC_MS = (config.FULL_SYNC_INTERVAL_MINUTES || 360) * 60 * 1000;
     setInterval(() => fullSync(client), FULL_SYNC_MS);
     setTimeout(() => fullSync(client), 15_000);
@@ -207,6 +225,85 @@ async function cleanupStaleRooms() {
     if (removed > 0) {
         console.log(`🧹 Удалено устаревших записей о лужах: ${removed}`);
     }
+}
+
+// =========================
+// 🆕 СОЗДАНИЕ ЛУЖИ
+// =========================
+async function createRoomForMember(member, guild) {
+    try {
+        const existingOwned = [...roomOwners.entries()].find(([, owner]) => owner === member.id);
+
+        if (existingOwned) {
+            const existingChannel = guild.channels.cache.get(existingOwned[0])
+                || await guild.channels.fetch(existingOwned[0]).catch(() => null);
+
+            if (existingChannel && existingChannel.type === ChannelType.GuildVoice) {
+                if (existingChannel.members.size === 0) {
+                    console.log(`🔄 Перекидываю ${member.user.tag} в существующую лужу.`);
+                    await member.voice.setChannel(existingChannel).catch(() => {});
+                    return;
+                }
+            } else {
+                removeRoomOwner(existingOwned[0]);
+            }
+        }
+
+        const createChannel = guild.channels.cache.get(CREATE_ROOM_CHANNEL_ID)
+            || await guild.channels.fetch(CREATE_ROOM_CHANNEL_ID).catch(() => null);
+
+        const room = await guild.channels.create({
+            name: `${member.displayName}${ROOM_SUFFIX}`,
+            type: ChannelType.GuildVoice,
+            parent: createChannel ? createChannel.parentId : null
+        });
+
+        await room.lockPermissions().catch(() => {});
+
+        await room.permissionOverwrites.edit(member.id, {
+            ManageChannels: true,
+            MoveMembers: true
+        }).catch(() => {});
+
+        setRoomOwner(room.id, member.id);
+
+        try {
+            const container = buildControlPanelV2(member, room.id);
+            await room.send({
+                components: [container],
+                flags: MessageFlags.IsComponentsV2
+            });
+        } catch (e) {
+            console.error('❌ Ошибка отправки панели:', e);
+        }
+
+        await member.voice.setChannel(room).catch(() => {});
+        console.log(`✅ Создана лужа для ${member.user.tag}`);
+    } catch (e) {
+        console.error(`Ошибка создания лужи для ${member.user.tag}:`, e);
+    }
+}
+
+// =========================
+// 🆕 ПРОВЕРКА ПРИ ЗАПУСКЕ
+// =========================
+async function checkCreateRoomOnStartup() {
+    console.log('🔍 Проверяем канал создания луж при запуске...');
+
+    for (const guild of client.guilds.cache.values()) {
+        const createChannel = guild.channels.cache.get(CREATE_ROOM_CHANNEL_ID)
+            || await guild.channels.fetch(CREATE_ROOM_CHANNEL_ID).catch(() => null);
+
+        if (!createChannel || createChannel.type !== ChannelType.GuildVoice) continue;
+
+        if (createChannel.members.size > 0) {
+            for (const member of createChannel.members.values()) {
+                if (member.user.bot) continue;
+                await createRoomForMember(member, guild);
+            }
+        }
+    }
+    console.log('✅ Проверка канала создания завершена.');
 }
 
 // =========================
@@ -283,7 +380,6 @@ function buildControlPanelV2(member, roomId) {
 
     container.addSeparatorComponents(new SeparatorBuilder());
 
-    // === НИЖНЯЯ ЧАСТЬ: ТЕКСТ СЛЕВА, КАРТИНКА СПРАВА ===
     const frogThumbnail = new ThumbnailBuilder()
         .setURL(FROG_IMAGE_URL)
         .setDescription('Лягушонок');
@@ -354,7 +450,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             } else if (oldState.channelId && !newState.channelId) {
                 const recorded = stats.endVoice(m.id);
                 if (recorded) {
-                    checkMemberEvolution(m).catch(e => console.error('evo:', e));
+                    // 🆕 ЗАГЛУШКА: эволюция отключена
+                    // checkMemberEvolution(m).catch(e => console.error('evo:', e));
                 }
             }
         }
@@ -362,48 +459,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         if (newState.channelId === CREATE_ROOM_CHANNEL_ID && oldState.channelId !== CREATE_ROOM_CHANNEL_ID) {
             const member = newState.member;
             if (!member) return;
-
-            const existingOwned = [...roomOwners.entries()].find(([, owner]) => owner === member.id);
-            if (existingOwned) {
-                const existingChannel = newState.guild.channels.cache.get(existingOwned[0])
-                    || await newState.guild.channels.fetch(existingOwned[0]).catch(() => null);
-
-                if (existingChannel && existingChannel.type === ChannelType.GuildVoice) {
-                    if (existingChannel.members.size === 0) {
-                        await member.voice.setChannel(existingChannel).catch(() => {});
-                        return;
-                    }
-                } else {
-                    removeRoomOwner(existingOwned[0]);
-                }
-            }
-
-            const room = await newState.guild.channels.create({
-                name: `${member.displayName}${ROOM_SUFFIX}`,
-                type: ChannelType.GuildVoice,
-                parent: newState.channel.parentId
-            });
-
-            await room.lockPermissions().catch(() => {});
-
-            await room.permissionOverwrites.edit(member.id, {
-                ManageChannels: true,
-                MoveMembers: true
-            }).catch(() => {});
-
-            setRoomOwner(room.id, member.id);
-
-            try {
-                const container = buildControlPanelV2(member, room.id);
-                await room.send({
-                    components: [container],
-                    flags: MessageFlags.IsComponentsV2
-                });
-            } catch (e) {
-                console.error('❌ Ошибка отправки панели:', e);
-            }
-
-            await member.voice.setChannel(room).catch(() => {});
+            await createRoomForMember(member, newState.guild);
         }
 
         if (oldState.channelId === newState.channelId) return;
@@ -445,8 +501,12 @@ client.on('interactionCreate', async (interaction) => {
         if (!interaction.isButton()) return;
         const customId = interaction.customId;
 
+        // 🆕 ЗАГЛУШКА: кнопки рейтинга отключены
         if (customId.startsWith('top_')) {
-            return handleTopButton(interaction);
+            return interaction.reply({
+                content: DISABLED_MESSAGE,
+                flags: MessageFlags.Ephemeral
+            });
         }
 
         const channel = interaction.channel;
@@ -657,7 +717,7 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 // =========================
-// 📊 ЛОГИКА ТОПА
+// 📊 ЛОГИКА ТОПА (оставлена, но недоступна)
 // =========================
 async function buildTopEmbed(guild, metric, page, requestedBy) {
     const PER_PAGE = 10;
@@ -751,6 +811,22 @@ function buildTopButtons(metric, page, totalPages) {
 // =========================
 client.on('interactionCreate', async (interaction) => {
     try {
+        // 🆕 ЗАГЛУШКИ СЛЕШ-КОМАНД
+        if (interaction.isChatInputCommand()) {
+            const { commandName } = interaction;
+
+            if (commandName === 'top' || commandName === 'evolve') {
+                return interaction.reply({
+                    content: DISABLED_MESSAGE,
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+
+            // /panel — оставляем рабочим (если он где-то реализован)
+            // если обработчика нет — добавь его отдельно
+            return;
+        }
+
         if (interaction.isModalSubmit()) {
             const customId = interaction.customId;
             const channel = interaction.channel;
@@ -784,6 +860,9 @@ client.on('interactionCreate', async (interaction) => {
                     });
                 }
                 return interaction.reply({
+                    content: `${ePencil()} Лужа переименована в **${raw}**.`,
+                    flags: MessageFlags.Ephemeral
+                               return interaction.reply({
                     content: `${ePencil()} Лужа переименована в **${raw}**.`,
                     flags: MessageFlags.Ephemeral
                 });
@@ -828,355 +907,156 @@ client.on('interactionCreate', async (interaction) => {
                 } catch (e) {
                     console.error('setUserLimit:', e);
                     return interaction.reply({
-                        content: '❌ Не удалось установить лимит. Проверь права бота.',
+                        content: '❌ Не удалось изменить лимит. Проверь права бота.',
                         flags: MessageFlags.Ephemeral
                     });
                 }
 
-                refreshPanel(channel, ownerId);
-
                 return interaction.reply({
                     content: limit === 0
-                        ? `${eFrogs()} Лимит снят — в лужу может заплыть сколько угодно лягушек.`
+                        ? `${eFrogs()} Лимит снят — лужа без ограничений.`
                         : `${eFrogs()} Лимит установлен: **${limit}** лягушек.`,
                     flags: MessageFlags.Ephemeral
                 });
             }
+
             return;
         }
 
-        if (interaction.isChatInputCommand()) {
-            if (interaction.commandName === 'top') {
-                await interaction.deferReply();
+        // =========================
+        // 📋 СЕЛЕКТЫ (регион / передача)
+        // =========================
+        if (interaction.isStringSelectMenu()) {
+            const customId = interaction.customId;
+            const channel = interaction.channel;
 
-                const { embed, totalPages } = await buildTopEmbed(
-                    interaction.guild, 'voice', 0, interaction.user.username
-                );
-                const components = buildTopButtons('voice', 0, totalPages);
-
-                return interaction.editReply({ embeds: [embed], components });
-            }
-
-            if (interaction.commandName === 'evolve') {
-                const userId = interaction.user.id;
-                const member = interaction.member;
-
-                const excludedRole = member.roles.cache.find(r => config.EXCLUDED_ROLES.includes(r.id));
-                if (excludedRole) {
-                    return interaction.reply({
-                        content:
-                            `🐸 **Твой статус:**\n\n` +
-                            `🏆 Текущая роль: **${excludedRole.name}**\n\n` +
-                            `🌿 Эволюция тебе недоступна — ты уже достиг(ла) высшей ступени Пруда.`,
-                        flags: MessageFlags.Ephemeral                    });
-                }
-
-                const days = stats.getActiveDays(userId);
-                const hours = stats.getVoiceHours(userId);
-                const eligible = stats.getEligibleRole(userId);
-                const displayRole = getDisplayRole(member);
-
+            if (!channel || !isRoom(channel.id)) {
                 return interaction.reply({
-                    content:
-                        `🐸 **Твой прогресс:**\n\n` +
-                        `📅 Активных дней: **${days}**\n` +
-                        `🔊 Часов в голосе: **${hours.toFixed(1)}**\n` +
-                        `🏆 Текущая роль: **${displayRole}**\n` +
-                        `⏭ Следующая цель: **${eligible.name}**`,
+                    content: '🌊 Это не лужа — здесь нет кнопок Кувшинки.',
                     flags: MessageFlags.Ephemeral
                 });
             }
 
-            if (interaction.commandName === 'panel') {
-                const member = interaction.member;
-                const voiceChannel = member.voice.channel;
+            const channelId = channel.id;
+            const ownerId = roomOwners.get(channelId);
 
-                if (!voiceChannel) {
-                    return interaction.reply({
-                        content: '🌊 Ты не в голосовом канале. Зайди в свою лужу и попробуй снова.',
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
+            if (interaction.member.id !== ownerId) {
+                return interaction.reply({
+                    content: '🌿 Этой лужей управляет другой обитатель Пруда.',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
 
-                if (!isRoom(voiceChannel.id)) {
-                    return interaction.reply({
-                        content: '🌊 Это не лужа — здесь нет панели Кувшинки.',
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
-
-                const ownerId = roomOwners.get(voiceChannel.id);
-                if (member.id !== ownerId) {
-                    return interaction.reply({
-                        content: '🌿 Этой лужей управляет другой обитатель Пруда.',
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
+            if (customId.startsWith('region_select_')) {
+                const value = interaction.values[0];
 
                 try {
-                    const container = buildControlPanelV2(member, voiceChannel.id);
-                    await voiceChannel.send({
-                        components: [container],
-                        flags: MessageFlags.IsComponentsV2
-                    });
+                    // 'auto' => null (автоматический выбор Discord)
+                    await channel.setRTCRegion(value === 'auto' ? null : value);
                 } catch (e) {
-                    console.error('❌ Ошибка отправки панели:', e);
+                    console.error('setRTCRegion:', e);
                     return interaction.reply({
-                        content: '❌ Не удалось отправить панель. Проверь права бота.',
+                        content: '❌ Не удалось сменить регион. Проверь права бота.',
                         flags: MessageFlags.Ephemeral
                     });
                 }
 
+                const regionLabel = REGIONS.find(r => r.value === value)?.label || value;
+                await refreshPanel(channel, ownerId);
+
                 return interaction.reply({
-                    content: '🌺 Панель управления отправлена в твою лужу!',
+                    content: `${eGlobe()} Место обитания изменено: **${regionLabel}**.`,
                     flags: MessageFlags.Ephemeral
                 });
             }
-            return;
-        }
 
-        if (!interaction.isStringSelectMenu()) return;
+            if (customId.startsWith('transfer_select_')) {
+                const newOwnerId = interaction.values[0];
 
-        const customId = interaction.customId;
-        const channel = interaction.channel;
-        if (!channel || !isRoom(channel.id)) return;
+                const target = channel.members.get(newOwnerId);
+                if (!target) {
+                    return interaction.reply({
+                        content: '🌾 Этот участник уже покинул лужу — передача отменена.',
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
 
-        const channelId = channel.id;
-        const ownerId = roomOwners.get(channelId);
-
-        if (customId.startsWith('transfer_select_')) {
-            if (interaction.member.id !== ownerId) {
-                return interaction.update({
-                    content: '🌿 Этой лужей управляет другой обитатель Пруда.',
-                    components: []
-                });
-            }
-            const newOwnerId = interaction.values[0];
-            const newOwner = await interaction.guild.members.fetch(newOwnerId).catch(() => null);
-            if (!newOwner) {
-                return interaction.update({
-                    content: '❌ Не удалось найти участника.',
-                    components: []
-                });
-            }
-
-            await interaction.update({
-                content: `${eTransfer()} Передаю лужу ${newOwner}...`,
-                components: []
-            });
-            try {
                 await transferOwnership(channel, ownerId, newOwnerId, false);
-                await interaction.editReply({
-                    content: `✅ Лужа передана ${newOwner}.`,
-                    components: []
+
+                return interaction.reply({
+                    content: `${eTransfer()} Владение передано <@${newOwnerId}>.`,
+                    flags: MessageFlags.Ephemeral
                 });
-            } catch {
-                await interaction.editReply({
-                    content: '❌ Что-то пошло не так. Попробуй ещё раз.',
-                    components: []
-                }).catch(() => {});
             }
+
             return;
         }
 
-        if (customId.startsWith('region_select_')) {
-            if (interaction.member.id !== ownerId) {
-                return interaction.update({
-                    content: '🌿 Этой лужей управляет другой обитатель Пруда.',
-                    components: []
-                });
-            }
-            const value = interaction.values[0];
-            const regionId = value === 'auto' ? null : value;
-
-            try {
-                await channel.setRTCRegion(regionId);
-            } catch (e) {
-                console.error('setRTCRegion:', e);
-                return interaction.update({
-                    content: '❌ Не удалось сменить место обитания. Discord мог отключить эту функцию для ботов.',
-                    components: []
-                });
-            }
-
-            const label = REGIONS.find(r => r.value === value)?.label || value;
-            return interaction.update({
-                content: `${eGlobe()} Место обитания изменено на **${label}**.`,
-                components: []
-            });
-        }
+        return;
     } catch (e) {
         if (e.code === 10062) {
             console.log('⚠️ Interaction устарел (10062) — пропускаем.');
         } else {
-            console.error('Ошибка обработки списка/модалки:', e);
+            console.error('Ошибка обработки interaction:', e);
         }
     }
 });
 
 // =========================
-// 📊 КНОПКИ РЕЙТИНГА
+// 🆕 ОБРАБОТЧИК /panel (если нужен)
 // =========================
-async function handleTopButton(interaction) {
-    const id = interaction.customId;
-
-    if (id === 'top_close') {
-        return interaction.message.delete().catch(() => {});
-    }
-
-    if (id === 'top_voice' || id === 'top_days') {
-        const metric = id.split('_')[1];
-        const { embed, totalPages } = await buildTopEmbed(
-            interaction.guild, metric, 0, interaction.user.username
-        );
-        const components = buildTopButtons(metric, 0, totalPages);
-        return interaction.update({ embeds: [embed], components });
-    }
-
-    if (id.startsWith('top_page_')) {
-        const parts = id.split('_');
-        const metric = parts[2];
-        const page = parseInt(parts[3], 10);
-        const { embed, totalPages } = await buildTopEmbed(
-            interaction.guild, metric, page, interaction.user.username
-        );
-        const components = buildTopButtons(metric, page, totalPages);
-        return interaction.update({ embeds: [embed], components });
-    }
-}
-
-// =========================
-// 🏷️ Отображаемая роль
-// =========================
-function getDisplayRole(member) {
-    const evoRole = config.EVOLUTION_ROLES.find(r => member.roles.cache.has(r.id));
-    if (evoRole) return evoRole.name;
-
-    const highest = member.roles.highest;
-    if (highest && highest.name !== '@everyone') return highest.name;
-
-    return 'без роли';
-}
-
-// =========================
-// 🐸 ЭВОЛЮЦИЯ
-// =========================
-async function checkMemberEvolution(member) {
-    if (!member || member.user.bot) return;
-
-    if (member.roles.cache.some(r => config.EXCLUDED_ROLES.includes(r.id))) return;
-
-    const hasAnyEvo = member.roles.cache.some(r =>
-        config.EVOLUTION_ROLES.some(er => er.id === r.id)
-    );
-    if (!hasAnyEvo) return;
-
-    const eligible = stats.getEligibleRole(member.id);
-    const user = stats.getUser(member.id);
-    if (user.currentRole === eligible.name) return;
-
-    const curIdx = config.EVOLUTION_ROLES.findIndex(r => r.name === user.currentRole);
-    const newIdx = config.EVOLUTION_ROLES.findIndex(r => r.name === eligible.name);
-    if (newIdx < curIdx) return;
-
-    for (const role of config.EVOLUTION_ROLES) {
-        if (role.id && member.roles.cache.has(role.id)) {
-            await member.roles.remove(role.id).catch(() => {});
-        }
-    }
-    await member.roles.add(eligible.id).catch(() => {});
-    user.currentRole = eligible.name;
-    console.log(`${member.user.tag} -> "${eligible.name}"`);
-
-    if (config.EVOLUTION_LOG_CHANNEL_ID) {
-        const ch = await member.guild.channels
-            .fetch(config.EVOLUTION_LOG_CHANNEL_ID)
-            .catch(() => null);
-
-        if (ch) {
-            const prevRole = config.EVOLUTION_ROLES[curIdx]?.name || 'икра';
-
-            const stageEmojiId = {
-                'икра':       '1518852254877351946',
-                'головастик': '1518852303245938698',
-                'малёк':      '1518852536805625998',
-                'лягушонок':  '1518852349626421288',
-                'лягушка':    '1518852591851933776',
-                'жаба':       '1545904956681490553'
-            };
-
-            const emojiId = stageEmojiId[eligible.name];
-            const emoji = emojiId
-                ? (member.guild.emojis.cache.get(emojiId)?.toString() ||
-                   member.client.emojis.cache.get(emojiId)?.toString() ||
-                   `<:emoji:${emojiId}>`)
-                : '';
-
-            await ch.send(
-                `🌱 Кажется, в Пруду кто-то подрос...\n\n` +
-                `${emoji} ${member} больше не **${prevRole}**. ` +
-                `Теперь он(а) — **${eligible.name}**.`
-            ).catch(() => {});
-        }
-    }
-}
-
-async function fullSync(client) {
+// Если у тебя уже есть отдельная реализация /panel — удали этот блок,
+// чтобы не было двойной регистрации. Если нет — он вызовет панель в текущей луже.
+client.on('interactionCreate', async (interaction) => {
     try {
-        console.log('🔄 Полная синхронизация эволюции...');
-        for (const guild of client.guilds.cache.values()) {
-            const members = await guild.members.fetch();
-            for (const member of members.values()) {
-                await checkMemberEvolution(member);
-            }
+        if (!interaction.isChatInputCommand()) return;
+        if (interaction.commandName !== 'panel') return;
+
+        const channel = interaction.channel;
+        if (!channel || !isRoom(channel.id)) {
+            return interaction.reply({
+                content: '🌊 Эта команда работает только внутри личной лужи.',
+                flags: MessageFlags.Ephemeral
+            });
         }
-        stats.saveStats();
-        console.log('✅ Полная синхронизация завершена.');
+
+        const ownerId = roomOwners.get(channel.id);
+        if (interaction.member.id !== ownerId) {
+            return interaction.reply({
+                content: '🌿 Этой лужей управляет другой обитатель Пруда.',
+                flags: MessageFlags.Ephemeral
+            });
+        }
+
+        const container = buildControlPanelV2(interaction.member, channel.id);
+        return interaction.reply({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+        });
     } catch (e) {
-        console.error('fullSync:', e);
-    }
-}
-
-// =========================
-// 🧹 ВЫХОД
-// =========================
-let shuttingDown = false;
-async function shutdown(signal) {
-    if (shuttingDown) return;
-    shuttingDown = true;
-    console.log(`\n🧹 ${signal}. Уходим...`);
-    stats.saveStats();
-
-    const forceExit = setTimeout(() => process.exit(0), 5000);
-    let deleted = 0;
-    try {
-        for (const guild of client.guilds.cache.values()) {
-            const channels = await guild.channels.fetch().catch(() => null);
-            if (!channels) continue;
-            for (const channel of channels.values()) {
-                if (channel &&
-                    isRoom(channel.id) &&
-                    channel.type === ChannelType.GuildVoice &&
-                    channel.members?.size === 0) {
-                    const ok = await channel.delete().then(() => true).catch(() => false);
-                    if (ok) {
-                        deleted++;
-                        removeRoomOwner(channel.id);
-                    }
-                }
-            }
+        if (e.code === 10062) {
+            console.log('⚠️ Interaction устарел (10062) — пропускаем.');
+        } else {
+            console.error('Ошибка /panel:', e);
         }
-    } catch (e) {}
-    console.log(`✅ Удалено пустых луж: ${deleted}`);
-    clearTimeout(forceExit);
-    client.destroy();
-    process.exit(0);
-}
-
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
+    }
+});
 
 // =========================
-// 🔐 ВХОД
+// 🐸 ЛОГИН
 // =========================
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN).catch(err => {
+    console.error('❌ Не удалось войти в Discord:', err);
+    process.exit(1);
+});
+
+// =========================
+// 🛡️ ГЛОБАЛЬНЫЕ ПЕРЕХВАТЧИКИ
+// =========================
+process.on('unhandledRejection', (reason) => {
+    console.error('⚠️ unhandledRejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('💥 uncaughtException:', err);
+});
