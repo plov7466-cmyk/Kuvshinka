@@ -894,33 +894,19 @@ client.on('interactionCreate', async (interaction) => {
             return;
         }
 
-        if (interaction.isChatInputCommand()) {
-            if (interaction.commandName === 'top') {
-                await interaction.deferReply();
+       if (interaction.commandName === 'top') {
+    return interaction.reply({
+        content: '🌊 Команда `/top` временно на реконструкции. Кувшинка скоро всё починит!',
+        flags: MessageFlags.Ephemeral
+    });
+}
 
-                const { embed, totalPages } = await buildTopEmbed(
-                    interaction.guild, 'voice', 0, interaction.user.username
-                );
-                const components = buildTopButtons('voice', 0, totalPages);
-
-                return interaction.editReply({ embeds: [embed], components });
-            }
-
-            if (interaction.commandName === 'evolve') {
-                const userId = interaction.user.id;
-                const member = interaction.member;
-
-                const excludedRole = member.roles.cache.find(r => config.EXCLUDED_ROLES.includes(r.id));
-                if (excludedRole) {
-                    return interaction.reply({
-                        content:
-                            `🐸 **Твой статус:**\n\n` +
-                            `🏆 Текущая роль: **${excludedRole.name}**\n\n` +
-                            `🌿 Эволюция тебе недоступна — ты уже достиг(ла) высшей ступени Пруда.`,
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
-
+if (interaction.commandName === 'evolve') {
+    return interaction.reply({
+        content: '🐸 Команда `/evolve` временно на реконструкции. Кувшинка скоро всё починит!',
+        flags: MessageFlags.Ephemeral
+    });
+}
                 const days = stats.getActiveDays(userId);
                 const hours = stats.getVoiceHours(userId);
                 const eligible = stats.getEligibleRole(userId);
