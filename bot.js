@@ -894,19 +894,26 @@ client.on('interactionCreate', async (interaction) => {
             return;
         }
 
-       if (interaction.commandName === 'top') {
-    return interaction.reply({
-        content: '🌊 Команда `/top` временно на реконструкции. Кувшинка скоро всё починит!',
-        flags: MessageFlags.Ephemeral
-    });
-}
+              if (interaction.isChatInputCommand()) {
+            if (interaction.commandName === 'top') {
+                return interaction.reply({
+                    content: '🌊 Команда `/top` временно на реконструкции. Кувшинка скоро всё починит!',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
 
-if (interaction.commandName === 'evolve') {
-    return interaction.reply({
-        content: '🐸 Команда `/evolve` временно на реконструкции. Кувшинка скоро всё починит!',
-        flags: MessageFlags.Ephemeral
-    });
-}
+            if (interaction.commandName === 'evolve') {
+                return interaction.reply({
+                    content: '🐸 Команда `/evolve` временно на реконструкции. Кувшинка скоро всё починит!',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+
+            if (interaction.commandName === 'panel') {
+                // ... код /panel без изменений ...
+            }
+            return;
+        }
                 const days = stats.getActiveDays(userId);
                 const hours = stats.getVoiceHours(userId);
                 const eligible = stats.getEligibleRole(userId);
