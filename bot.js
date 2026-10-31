@@ -211,12 +211,11 @@ async function cleanupStaleRooms() {
 }
 
 // =========================
-// 🌊 СОЗДАНИЕ ЛУЖИ (переиспользуемая логика)
+// 🌊 СОЗДАНИЕ ЛУЖИ
 // =========================
 async function createRoomForMember(member, sourceChannel) {
     const guild = member.guild;
 
-    // Проверяем, есть ли уже живая лужа у участника
     const existingOwned = [...roomOwners.entries()]
         .find(([, owner]) => owner === member.id);
 
@@ -264,7 +263,7 @@ async function createRoomForMember(member, sourceChannel) {
 }
 
 // =========================
-// 🌊 ЛУЖИ ДЛЯ ОЖИДАЮЩИХ В КАНАЛЕ СОЗДАНИЯ
+// 🌊 ЛУЖИ ДЛЯ ОЖИДАЮЩИХ
 // =========================
 async function createRoomsForWaitingMembers() {
     let created = 0;
@@ -884,17 +883,16 @@ client.on('interactionCreate', async (interaction) => {
 
                 refreshPanel(channel, ownerId);
 
-                               return interaction.reply({
+                return interaction.reply({
                     content: limit === 0
                         ? `${eFrogs()} Лимит снят — в лужу может заплыть сколько угодно лягушек.`
                         : `${eFrogs()} Лимит установлен: **${limit}** лягушек.`,
                     flags: MessageFlags.Ephemeral
-                });
-            }
+                           }
             return;
         }
 
-              if (interaction.isChatInputCommand()) {
+        if (interaction.isChatInputCommand()) {
             if (interaction.commandName === 'top') {
                 return interaction.reply({
                     content: '🌊 Команда `/top` временно на реконструкции. Кувшинка скоро всё починит!',
@@ -905,27 +903,6 @@ client.on('interactionCreate', async (interaction) => {
             if (interaction.commandName === 'evolve') {
                 return interaction.reply({
                     content: '🐸 Команда `/evolve` временно на реконструкции. Кувшинка скоро всё починит!',
-                    flags: MessageFlags.Ephemeral
-                });
-            }
-
-            if (interaction.commandName === 'panel') {
-                // ... код /panel без изменений ...
-            }
-            return;
-        }
-                const days = stats.getActiveDays(userId);
-                const hours = stats.getVoiceHours(userId);
-                const eligible = stats.getEligibleRole(userId);
-                const displayRole = getDisplayRole(member);
-
-                return interaction.reply({
-                    content:
-                        `🐸 **Твой прогресс:**\n\n` +
-                        `📅 Активных дней: **${days}**\n` +
-                        `🔊 Часов в голосе: **${hours.toFixed(1)}**\n` +
-                        `🏆 Текущая роль: **${displayRole}**\n` +
-                        `⏭ Следующая цель: **${eligible.name}**`,
                     flags: MessageFlags.Ephemeral
                 });
             }
