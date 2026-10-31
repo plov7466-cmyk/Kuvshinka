@@ -888,7 +888,8 @@ client.on('interactionCreate', async (interaction) => {
                         ? `${eFrogs()} Лимит снят — в лужу может заплыть сколько угодно лягушек.`
                         : `${eFrogs()} Лимит установлен: **${limit}** лягушек.`,
                     flags: MessageFlags.Ephemeral
-                           }
+                });
+            }
             return;
         }
 
