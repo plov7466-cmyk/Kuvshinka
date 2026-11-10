@@ -1,0 +1,914 @@
+{
+  "393816046030553098": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "851502851061841931": {
+    "voiceSeconds": 22,
+    "days": {
+      "2026-09-23": {
+        "messages": 1,
+        "voiceSeconds": 0
+      },
+      "2026-09-25": {
+        "voiceSeconds": 22
+      }
+    },
+    "lastSeen": "2026-09-23",
+    "currentRole": "икра"
+  },
+  "731541159859454135": {
+    "voiceSeconds": 186493,
+    "days": {
+      "2026-10-05": {
+        "voiceSeconds": 13541
+      },
+      "2026-10-06": {
+        "voiceSeconds": 43385
+      },
+      "2026-10-07": {
+        "voiceSeconds": 11258
+      },
+      "2026-10-24": {
+        "voiceSeconds": 1639
+      },
+      "2026-10-25": {
+        "voiceSeconds": 20272
+      },
+      "2026-10-26": {
+        "voiceSeconds": 13088
+      },
+      "2026-10-28": {
+        "voiceSeconds": 3954
+      },
+      "2026-11-01": {
+        "voiceSeconds": 15501
+      },
+      "2026-11-02": {
+        "voiceSeconds": 10912
+      },
+      "2026-11-03": {
+        "voiceSeconds": 2560
+      },
+      "2026-11-04": {
+        "voiceSeconds": 38021
+      },
+      "2026-11-07": {
+        "voiceSeconds": 6728
+      },
+      "2026-11-08": {
+        "voiceSeconds": 5634
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "255735812841406464": {
+    "voiceSeconds": 210788,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 28742
+      },
+      "2026-10-04": {
+        "voiceSeconds": 36297
+      },
+      "2026-10-25": {
+        "voiceSeconds": 21181
+      },
+      "2026-10-27": {
+        "voiceSeconds": 16671
+      },
+      "2026-10-28": {
+        "voiceSeconds": 18810
+      },
+      "2026-10-29": {
+        "voiceSeconds": 15590
+      },
+      "2026-11-03": {
+        "voiceSeconds": 5244
+      },
+      "2026-11-04": {
+        "voiceSeconds": 36557
+      },
+      "2026-11-05": {
+        "voiceSeconds": 16163
+      },
+      "2026-11-07": {
+        "voiceSeconds": 15533
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "головастик"
+  },
+  "335849962107568128": {
+    "voiceSeconds": 319497,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 27122
+      },
+      "2026-10-04": {
+        "voiceSeconds": 38192
+      },
+      "2026-10-05": {
+        "voiceSeconds": 33929
+      },
+      "2026-10-06": {
+        "voiceSeconds": 31684
+      },
+      "2026-10-07": {
+        "voiceSeconds": 4177
+      },
+      "2026-10-25": {
+        "voiceSeconds": 13716
+      },
+      "2026-10-26": {
+        "voiceSeconds": 8305
+      },
+      "2026-10-27": {
+        "voiceSeconds": 14717
+      },
+      "2026-10-28": {
+        "voiceSeconds": 9860
+      },
+      "2026-10-29": {
+        "voiceSeconds": 9046
+      },
+      "2026-10-30": {
+        "voiceSeconds": 1998
+      },
+      "2026-11-01": {
+        "voiceSeconds": 55
+      },
+      "2026-11-02": {
+        "voiceSeconds": 3218
+      },
+      "2026-11-03": {
+        "voiceSeconds": 20284
+      },
+      "2026-11-04": {
+        "voiceSeconds": 37290
+      },
+      "2026-11-05": {
+        "voiceSeconds": 27165
+      },
+      "2026-11-06": {
+        "voiceSeconds": 10277
+      },
+      "2026-11-07": {
+        "voiceSeconds": 28462
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1267099533331136584": {
+    "voiceSeconds": 6929,
+    "days": {
+      "2026-10-25": {
+        "voiceSeconds": 2280
+      },
+      "2026-11-06": {
+        "voiceSeconds": 4649
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1569223424327295026": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1448415384284823654": {
+    "voiceSeconds": 161,
+    "days": {
+      "2026-10-24": {
+        "voiceSeconds": 161
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "487951966325178399": {
+    "voiceSeconds": 3795,
+    "days": {
+      "2026-10-25": {
+        "voiceSeconds": 3795
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "485454021432442891": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "410116245728526346": {
+    "voiceSeconds": 269264,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 11013
+      },
+      "2026-10-04": {
+        "voiceSeconds": 37215
+      },
+      "2026-10-05": {
+        "voiceSeconds": 18901
+      },
+      "2026-10-06": {
+        "voiceSeconds": 22508
+      },
+      "2026-10-24": {
+        "voiceSeconds": 5484
+      },
+      "2026-10-25": {
+        "voiceSeconds": 16383
+      },
+      "2026-10-26": {
+        "voiceSeconds": 6269
+      },
+      "2026-10-27": {
+        "voiceSeconds": 9376
+      },
+      "2026-10-28": {
+        "voiceSeconds": 10816
+      },
+      "2026-10-29": {
+        "voiceSeconds": 3794
+      },
+      "2026-11-02": {
+        "voiceSeconds": 11886
+      },
+      "2026-11-03": {
+        "voiceSeconds": 26533
+      },
+      "2026-11-04": {
+        "voiceSeconds": 31180
+      },
+      "2026-11-05": {
+        "voiceSeconds": 18084
+      },
+      "2026-11-06": {
+        "voiceSeconds": 12001
+      },
+      "2026-11-07": {
+        "voiceSeconds": 27616
+      },
+      "2026-11-08": {
+        "voiceSeconds": 205
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "головастик"
+  },
+  "1155127802836828181": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1035570723923710012": {
+    "voiceSeconds": 89286,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 19312
+      },
+      "2026-10-04": {
+        "voiceSeconds": 67308
+      },
+      "2026-10-05": {
+        "voiceSeconds": 667
+      },
+      "2026-10-06": {
+        "voiceSeconds": 1954
+      },
+      "2026-10-11": {
+        "voiceSeconds": 45
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1498957554644942948": {
+    "voiceSeconds": 230928,
+    "days": {
+      "2026-10-24": {
+        "voiceSeconds": 8909
+      },
+      "2026-10-25": {
+        "voiceSeconds": 6791
+      },
+      "2026-10-26": {
+        "voiceSeconds": 7271
+      },
+      "2026-10-29": {
+        "voiceSeconds": 54063
+      },
+      "2026-10-30": {
+        "voiceSeconds": 28841
+      },
+      "2026-11-03": {
+        "voiceSeconds": 36291
+      },
+      "2026-11-04": {
+        "voiceSeconds": 37734
+      },
+      "2026-11-06": {
+        "voiceSeconds": 26261
+      },
+      "2026-11-07": {
+        "voiceSeconds": 12471
+      },
+      "2026-11-10": {
+        "voiceSeconds": 12296
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "головастик"
+  },
+  "1502130384324788295": {
+    "voiceSeconds": 115874,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 14024
+      },
+      "2026-10-25": {
+        "voiceSeconds": 9225
+      },
+      "2026-10-27": {
+        "voiceSeconds": 1804
+      },
+      "2026-11-03": {
+        "voiceSeconds": 14786
+      },
+      "2026-11-04": {
+        "voiceSeconds": 7215
+      },
+      "2026-11-05": {
+        "voiceSeconds": 24207
+      },
+      "2026-11-06": {
+        "voiceSeconds": 44613
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "139859185289396224": {
+    "voiceSeconds": 9139,
+    "days": {
+      "2026-10-05": {
+        "voiceSeconds": 553
+      },
+      "2026-10-07": {
+        "voiceSeconds": 3513
+      },
+      "2026-10-25": {
+        "voiceSeconds": 2994
+      },
+      "2026-11-04": {
+        "voiceSeconds": 1128
+      },
+      "2026-11-06": {
+        "voiceSeconds": 951
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "655822853983174656": {
+    "voiceSeconds": 43054,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 4007
+      },
+      "2026-10-06": {
+        "voiceSeconds": 18291
+      },
+      "2026-10-07": {
+        "voiceSeconds": 11011
+      },
+      "2026-11-04": {
+        "voiceSeconds": 9745
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "773871220268990485": {
+    "voiceSeconds": 262081,
+    "days": {
+      "2026-09-23": {
+        "messages": 1,
+        "voiceSeconds": 11
+      },
+      "2026-10-03": {
+        "voiceSeconds": 28710
+      },
+      "2026-10-04": {
+        "voiceSeconds": 28207
+      },
+      "2026-10-05": {
+        "voiceSeconds": 7439
+      },
+      "2026-10-06": {
+        "voiceSeconds": 31392
+      },
+      "2026-10-07": {
+        "voiceSeconds": 677
+      },
+      "2026-10-11": {
+        "voiceSeconds": 860
+      },
+      "2026-10-18": {
+        "voiceSeconds": 226
+      },
+      "2026-10-19": {
+        "voiceSeconds": 322
+      },
+      "2026-10-24": {
+        "voiceSeconds": 30778
+      },
+      "2026-10-25": {
+        "voiceSeconds": 1442
+      },
+      "2026-10-27": {
+        "voiceSeconds": 1572
+      },
+      "2026-10-28": {
+        "voiceSeconds": 12024
+      },
+      "2026-10-30": {
+        "voiceSeconds": 3534
+      },
+      "2026-11-03": {
+        "voiceSeconds": 38761
+      },
+      "2026-11-04": {
+        "voiceSeconds": 21523
+      },
+      "2026-11-05": {
+        "voiceSeconds": 5142
+      },
+      "2026-11-06": {
+        "voiceSeconds": 21
+      },
+      "2026-11-07": {
+        "voiceSeconds": 22169
+      },
+      "2026-11-08": {
+        "voiceSeconds": 11552
+      },
+      "2026-11-10": {
+        "voiceSeconds": 15719
+      }
+    },
+    "lastSeen": "2026-09-23",
+    "currentRole": "икра"
+  },
+  "1392480848204271767": {
+    "voiceSeconds": 13261,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 1789
+      },
+      "2026-10-06": {
+        "voiceSeconds": 34
+      },
+      "2026-11-03": {
+        "voiceSeconds": 4830
+      },
+      "2026-11-04": {
+        "voiceSeconds": 447
+      },
+      "2026-11-07": {
+        "voiceSeconds": 3529
+      },
+      "2026-11-08": {
+        "voiceSeconds": 2632
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "608765006158233602": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1377281033698807819": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "800028309089943552": {
+    "voiceSeconds": 17355,
+    "days": {
+      "2026-10-04": {
+        "voiceSeconds": 17355
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "545960062246453258": {
+    "voiceSeconds": 5808,
+    "days": {
+      "2026-10-07": {
+        "voiceSeconds": 5808
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "422074481696309248": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "943818480325656638": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "492704940138037258": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1186664669709074462": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "931979002099413022": {
+    "voiceSeconds": 419720,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 29938
+      },
+      "2026-10-04": {
+        "voiceSeconds": 46596
+      },
+      "2026-10-05": {
+        "voiceSeconds": 30341
+      },
+      "2026-10-06": {
+        "voiceSeconds": 26140
+      },
+      "2026-10-07": {
+        "voiceSeconds": 3833
+      },
+      "2026-10-25": {
+        "voiceSeconds": 45210
+      },
+      "2026-10-27": {
+        "voiceSeconds": 14617
+      },
+      "2026-10-28": {
+        "voiceSeconds": 22132
+      },
+      "2026-10-29": {
+        "voiceSeconds": 13
+      },
+      "2026-10-30": {
+        "voiceSeconds": 3534
+      },
+      "2026-10-31": {
+        "voiceSeconds": 1355
+      },
+      "2026-11-01": {
+        "voiceSeconds": 11104
+      },
+      "2026-11-02": {
+        "voiceSeconds": 5364
+      },
+      "2026-11-03": {
+        "voiceSeconds": 29413
+      },
+      "2026-11-04": {
+        "voiceSeconds": 60591
+      },
+      "2026-11-05": {
+        "voiceSeconds": 36742
+      },
+      "2026-11-06": {
+        "voiceSeconds": 8203
+      },
+      "2026-11-07": {
+        "voiceSeconds": 31013
+      },
+      "2026-11-08": {
+        "voiceSeconds": 11434
+      },
+      "2026-11-10": {
+        "voiceSeconds": 2147
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "779726307717808169": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1019129646085845074": {
+    "voiceSeconds": 126403,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 6901
+      },
+      "2026-10-04": {
+        "voiceSeconds": 13874
+      },
+      "2026-10-05": {
+        "voiceSeconds": 13500
+      },
+      "2026-10-06": {
+        "voiceSeconds": 21832
+      },
+      "2026-10-24": {
+        "voiceSeconds": 1202
+      },
+      "2026-10-25": {
+        "voiceSeconds": 13546
+      },
+      "2026-10-26": {
+        "voiceSeconds": 10121
+      },
+      "2026-10-28": {
+        "voiceSeconds": 283
+      },
+      "2026-10-29": {
+        "voiceSeconds": 238
+      },
+      "2026-11-01": {
+        "voiceSeconds": 15185
+      },
+      "2026-11-02": {
+        "voiceSeconds": 8884
+      },
+      "2026-11-03": {
+        "voiceSeconds": 4044
+      },
+      "2026-11-04": {
+        "voiceSeconds": 4855
+      },
+      "2026-11-05": {
+        "voiceSeconds": 4176
+      },
+      "2026-11-06": {
+        "voiceSeconds": 154
+      },
+      "2026-11-07": {
+        "voiceSeconds": 6777
+      },
+      "2026-11-08": {
+        "voiceSeconds": 831
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "головастик"
+  },
+  "439442071062052865": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "978988452928421901": {
+    "voiceSeconds": 7856,
+    "days": {
+      "2026-10-25": {
+        "voiceSeconds": 1915
+      },
+      "2026-10-28": {
+        "voiceSeconds": 1605
+      },
+      "2026-11-02": {
+        "voiceSeconds": 4019
+      },
+      "2026-11-04": {
+        "voiceSeconds": 317
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "628240564877524993": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "651783297264779265": {
+    "voiceSeconds": 358402,
+    "days": {
+      "2026-10-03": {
+        "voiceSeconds": 13118
+      },
+      "2026-10-04": {
+        "voiceSeconds": 36270
+      },
+      "2026-10-05": {
+        "voiceSeconds": 193
+      },
+      "2026-10-06": {
+        "voiceSeconds": 13358
+      },
+      "2026-10-07": {
+        "voiceSeconds": 95
+      },
+      "2026-10-24": {
+        "voiceSeconds": 12947
+      },
+      "2026-10-25": {
+        "voiceSeconds": 12720
+      },
+      "2026-10-26": {
+        "voiceSeconds": 37633
+      },
+      "2026-10-27": {
+        "voiceSeconds": 1110
+      },
+      "2026-10-28": {
+        "voiceSeconds": 16655
+      },
+      "2026-10-29": {
+        "voiceSeconds": 25080
+      },
+      "2026-10-30": {
+        "voiceSeconds": 36775
+      },
+      "2026-11-03": {
+        "voiceSeconds": 41205
+      },
+      "2026-11-04": {
+        "voiceSeconds": 48729
+      },
+      "2026-11-05": {
+        "voiceSeconds": 427
+      },
+      "2026-11-06": {
+        "voiceSeconds": 22489
+      },
+      "2026-11-07": {
+        "voiceSeconds": 27218
+      },
+      "2026-11-10": {
+        "voiceSeconds": 12380
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "779610147538206751": {
+    "voiceSeconds": 772,
+    "days": {
+      "2026-10-06": {
+        "voiceSeconds": 772
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1498738466177945770": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "1471421270049427498": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "440344577417936897": {
+    "voiceSeconds": 8135,
+    "days": {
+      "2026-10-24": {
+        "voiceSeconds": 4918
+      },
+      "2026-11-05": {
+        "voiceSeconds": 144
+      },
+      "2026-11-07": {
+        "voiceSeconds": 3073
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "411871629048807424": {
+    "voiceSeconds": 138811,
+    "days": {
+      "2026-10-28": {
+        "voiceSeconds": 18657
+      },
+      "2026-10-29": {
+        "voiceSeconds": 8310
+      },
+      "2026-11-01": {
+        "voiceSeconds": 8282
+      },
+      "2026-11-03": {
+        "voiceSeconds": 20185
+      },
+      "2026-11-04": {
+        "voiceSeconds": 20867
+      },
+      "2026-11-05": {
+        "voiceSeconds": 52628
+      },
+      "2026-11-06": {
+        "voiceSeconds": 33
+      },
+      "2026-11-07": {
+        "voiceSeconds": 3879
+      },
+      "2026-11-08": {
+        "voiceSeconds": 5970
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "565603161805553671": {
+    "voiceSeconds": 15964,
+    "days": {
+      "2026-11-03": {
+        "voiceSeconds": 695
+      },
+      "2026-11-04": {
+        "voiceSeconds": 4330
+      },
+      "2026-11-05": {
+        "voiceSeconds": 10515
+      },
+      "2026-11-07": {
+        "voiceSeconds": 424
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "366654242372583434": {
+    "voiceSeconds": 25665,
+    "days": {
+      "2026-11-04": {
+        "voiceSeconds": 16955
+      },
+      "2026-11-06": {
+        "voiceSeconds": 8710
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "775334131369246750": {
+    "voiceSeconds": 12099,
+    "days": {
+      "2026-11-06": {
+        "voiceSeconds": 3392
+      },
+      "2026-11-08": {
+        "voiceSeconds": 8707
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "553942349839859716": {
+    "voiceSeconds": 6867,
+    "days": {
+      "2026-11-06": {
+        "voiceSeconds": 636
+      },
+      "2026-11-08": {
+        "voiceSeconds": 6231
+      }
+    },
+    "lastSeen": null,
+    "currentRole": "икра"
+  },
+  "221607277801635840": {
+    "voiceSeconds": 0,
+    "days": {},
+    "lastSeen": null,
+    "currentRole": "икра"
+  }
+}
