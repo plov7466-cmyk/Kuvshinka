@@ -70,7 +70,7 @@ const WELCOME_CHANNEL_ID = '1510063211099983902';
 const CREATE_ROOM_CHANNEL_ID = '1518746457988010045';
 const ROOM_SUFFIX = "'s Лужа";
 const ROOM_IMAGE_URL = 'https://i.postimg.cc/MZDmCxKf/image.png';
-const FROG_IMAGE_URL = 'https://i.postimg.cc/Nj1BrTX6/image.png';
+const FROG_IMAGE_URL = 'https://i.postimg.cc/4xn2DTfH/image.png';
 
 // =========================
 // 🎨 ID КАСТОМНЫХ ЭМОДЗИ
